@@ -174,7 +174,7 @@ void Game::UpdateGate(GLfloat deltaTime)
             gateColor = glm::vec3(0.6f, 0.6f, 0.f) * fadeDimmer;
             if (fadeDimmer <= 0) drawGate = false;
         }
-        GLfloat gateThickness = 0.006f;
+        GLfloat gateThickness = 0.003f;
 
         Gate.draw(gateColor, gateThickness);
         Gate.checkBoundary(1);

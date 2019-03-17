@@ -140,7 +140,7 @@ public:
     
 //    void draw(Shader shader, GLuint VAO, GLuint drawArraySpecifier)
 //    void draw(glm::vec2 gateTrans = glm::vec2 (0.0f, 0.0f), GLuint gateRot = 0)
-    void draw(glm::vec3 gateColor = glm::vec3(0.0f, 1.0f, 0.0f), GLfloat gateThickness = 0.003f)
+    void draw(glm::vec3 gateColor = glm::vec3(0.0f, 1.0f, 0.0f), GLfloat gateThickness = 0.001f)
     {
         sShader->use();
         glBindVertexArray(Vao);
@@ -158,7 +158,7 @@ public:
         sShader->setMat4("model", model);
         sShader->setMat4("view", view);
         sShader->setVec3("aColor", gateColor);
-        sShader->setFloat("scaling", gateThickness);
+        sShader->setFloat("aThickness", gateThickness);
         glDrawArrays(DrawArraySpecifier, 0, NumOfVertices);
 //        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
     }
@@ -233,7 +233,7 @@ public:
         
     }
     
-    void drawExit(Shader * shader, Vbos * vao, glm::vec2 position)
+    void drawExit(Shader * shader, Vbos * vao, glm::vec2 position, GLfloat gateThickness = 0.002f)
     {
         glm::vec3 gateColor = glm::vec3(1.0f, 1.0f, 0.0f);
         shader->use();
@@ -251,7 +251,7 @@ public:
         shader->setMat4("model", model);
         shader->setMat4("view", view);
         shader->setVec3("aColor", gateColor);
-//        shader->setFloat("scaling", gateThickness);
+        shader->setFloat("aThickness", gateThickness);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         //        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
     }
@@ -275,7 +275,6 @@ public:
         shader->setMat4("model", model);
         shader->setMat4("view", view);
         shader->setVec3("aColor", gateColor);
-        //        shader->setFloat("scaling", gateThickness);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         //        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
     }

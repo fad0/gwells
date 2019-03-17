@@ -34,7 +34,7 @@ static const GLfloat explodeSize = 0.5f;
 //extern const glm::vec2 centerOfGravity = glm::vec2(0.0f, -1000.0f);
 
 // gunner scale
-static const GLfloat gunnerScale = 0.1f;
+static const GLfloat gunnerScale = 0.07f;
 static const glm::vec2 gunnerScaleVec = glm::vec2(gunnerScale, gunnerScale);
 static const GLfloat gunnerHeight = 0.45f * gunnerScale;
 
@@ -114,7 +114,7 @@ public:
     GLuint incrementer = 0;
     GLuint randomNumber = 1;
 
-    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 90, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.05f, 0.05f))
+    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 90, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.04f, 0.04f))
     {
         xpos = 0.0f;
         ypos = 0.0f;
@@ -251,6 +251,7 @@ public:
                 pShader->setMat4("model", model);
                 //                shader.setFloat("aPointSize", 10.0f);
                 pShader->setVec3("aColor", glm::vec3(1.0f, 0.0f, 0.5f));
+                pShader->setFloat("aPointSize", 8.0f);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glDisable(GL_PROGRAM_POINT_SIZE);
                 glBindVertexArray(0);
@@ -364,6 +365,7 @@ public:
                 pShader->setMat4("model", model);
                 //                    shader.setFloat("aPointSize", 4.0f);
                 pShader->setVec3("aColor", glm::vec3(0.0f, 1.0f, 0.0f));
+                pShader->setFloat("aPointSize", 5.0f);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glDisable(GL_PROGRAM_POINT_SIZE);
                 glBindVertexArray(0);
@@ -419,6 +421,7 @@ public:
                 pShader->setMat4("model", model);
                 //                    shader.setFloat("aPointSize", 4.0f);
                 pShader->setVec3("aColor", glm::vec3(0.0f, 1.0f, 0.0f));
+                pShader->setFloat("aPointSize", 5.0f);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glDisable(GL_PROGRAM_POINT_SIZE);
                 glBindVertexArray(0);

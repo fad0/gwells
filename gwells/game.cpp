@@ -92,8 +92,7 @@ void Game::Init()
     startPoints.clear();
     for (int i=0; i < Levels.size(); i++) {
         if ( Levels[i].Level["VERT_exit"].size() <= 0) {
-            exitPoints.push_back(glm::vec2(-10.0, -10.0));
-            std::cout << " VERT_exit does not exit in Level[" << i << "]\n";
+            std::cout << " VERT_exit does not exist in Level[" << i << "]\n";
         } else
             exitPoints.push_back(glm::vec2(Levels[i].Level["VERT_exit"][0], Levels[i].Level["VERT_exit"][1]));
         
@@ -132,7 +131,7 @@ void Game::Init()
 
 void Game::Update(GLfloat deltaTime)
 {
-    if (exitPoints[currentLevel][0] != -10.0)
+    if (Levels[currentLevel].Level["VERT_exit"].size() > 0)
         GroundSurface_p->drawExit(Shader_p, Vbos_p, exitPoint);
     Ship_p->update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
     

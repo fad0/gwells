@@ -215,7 +215,7 @@ public:
                 glDrawArrays(GL_TRIANGLES, 0, 3);
             }
             
-            updatePhotons2(firePhoton, true, vbos_p, pShader, false, 0.25f, DirAngle, deltaTime);
+            updatePhotons(firePhoton, true, vbos_p, pShader, false, 0.25f, DirAngle, deltaTime);
 
             for (Spaceship &gunna : *Guns_p) {
                 for ( int j=0; j < maxPhotons; j++) {

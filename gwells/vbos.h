@@ -9,6 +9,9 @@
 #ifndef vbos_h
 #define vbos_h
 
+#include <vector>
+#include <cmath>
+
 class Vbos
 {
     
@@ -21,6 +24,20 @@ public:
     GLuint blueholeVBO, blueholeVAO;
     GLuint tVAO, tVBO; // text
     GLuint exitVBO, exitVAO; // exit marker
+    // Ship vertices
+    GLfloat spaceship[6] = {
+        // positions
+        -0.5f, -0.4f,
+        0.5f,  0.0f,
+        -0.5f,  0.4f
+    };
+    std::vector<GLfloat> ShipPolarCoords;
+    
+    
+    
+    
+    
+    
     
 //    static const GLuint skyPoints = 24 * 3;
 //    GLfloat skyIsland[skyPoints * 2] = {
@@ -60,18 +77,27 @@ public:
     
     ~Vbos ()
     {
-        
+    }
+    
+    std::vector<GLfloat> getShipPolarCoords() {
+        ShipPolarCoords.push_back(sqrt(pow(spaceship[2],2) + pow(spaceship[3],2))); // ship front R
+        ShipPolarCoords.push_back(atan2(spaceship[3], spaceship[2]));             // ship front angle 0.
+        ShipPolarCoords.push_back(sqrt(pow(spaceship[4],2) + pow(spaceship[5],2)));   //ship top R
+        ShipPolarCoords.push_back(atan2(spaceship[5], spaceship[4]));               //ship top angle theta
+        ShipPolarCoords.push_back(sqrt(pow(spaceship[0],2) + pow(spaceship[1],2)));   // ship bottom R
+        ShipPolarCoords.push_back(atan2(spaceship[1], spaceship[0]));               // ship bottom angle theta
+        return ShipPolarCoords;
     }
     
     void init()
     {
         // Ship vertices
-        GLfloat spaceship[] = {
-            // positions
-            -0.5f, -0.4f,
-            0.5f,  0.0f,
-            -0.5f,  0.4f
-        };
+//        GLfloat spaceship[] = {
+//            // positions
+//            -0.5f, -0.4f,
+//            0.5f,  0.0f,
+//            -0.5f,  0.4f
+//        };
         
         // Ship's rocket flame vertices
         GLfloat flame[] = {

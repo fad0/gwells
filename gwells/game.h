@@ -95,6 +95,8 @@ public:
     std::vector<std::vector<glm::vec2>> centerOfGravitys;
     std::vector<std::vector<GLfloat>> gravityStrengths;
     
+    std::vector<GLfloat> ShipPolarCoords;
+    
     void Init();
     void InitSurfaces();
     void InitGuns();

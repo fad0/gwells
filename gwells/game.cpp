@@ -51,19 +51,20 @@ void Game::Init()
 
     Vbos_p = &vbos;
     vbos.init();
+    ShipPolarCoords = vbos.getShipPolarCoords();
     
     // Load all Levels
-    GameLevel level1("/Users/dirk/games/gwells/levels/level1.txt"); level1.Load();
-    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
-    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
-    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
-    GameLevel level5("/Users/dirk/games/gwells/levels/level5.txt"); level5.Load();
+    GameLevel level1("/Users/dirk/games/gwells/levels/testlevel.txt"); level1.Load();
+//    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
+//    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
+//    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
+//    GameLevel level5("/Users/dirk/games/gwells/levels/level5.txt"); level5.Load();
     
     Levels.push_back(level1);
-    Levels.push_back(level2);
-    Levels.push_back(level3);
-    Levels.push_back(level4);
-    Levels.push_back(level5);
+//    Levels.push_back(level2);
+//    Levels.push_back(level3);
+//    Levels.push_back(level4);
+//    Levels.push_back(level5);
 //    std::cout << "Level 1 skyvertices size: " << Levels[0].Level[Levels[0].vboName[0]].size() << std::endl;
 //    std::cout << "Level 2 skyvertices size: " << Levels[1].Level[Levels[1].vboName[0]].size() << std::endl;
 //    std::cout << "Level 3 skyvertices size: " << Levels[2].Level[Levels[2].vboName[0]].size() << std::endl;
@@ -99,8 +100,8 @@ void Game::Init()
         if ( Levels[i].Level["VERT_ship"].size() > 0)
             startPoints.push_back(glm::vec2(Levels[i].Level["VERT_ship"][0], Levels[i].Level["VERT_ship"][1]));
 //        std::cout << "Level = " << i << std::endl;
-//        std::cout << "exit.x = " << Levels[i].Level["VERT_exit"][0] << std::endl;
-//        std::cout << "exit.y = " << Levels[i].Level["VERT_exit"][1] << std::endl;
+//        std::cout << "ship.x = " << Levels[i].Level["VERT_ship"][0] << std::endl;
+//        std::cout << "ship.y = " << Levels[i].Level["VERT_ship"][1] << std::endl;
     }
 
     // Ship Object and Pointer for passing to asteriod and attacker objects
@@ -120,7 +121,8 @@ void Game::Init()
     this->InitGravity();
     
     // Set Level exit location and next level flag
-    exitPoint = exitPoints[currentLevel];
+    if (exitPoints.size()> 0)
+        exitPoint = exitPoints[currentLevel];
 
     drawGate = true;
     fadeGate = false;
@@ -131,8 +133,9 @@ void Game::Init()
 
 void Game::Update(GLfloat deltaTime)
 {
-    if (Levels[currentLevel].Level["VERT_exit"].size() > 0)
-        GroundSurface_p->drawExit(Shader_p, Vbos_p, exitPoint);
+    if (exitPoints.size() > 0)
+        if (Levels[currentLevel].Level["VERT_exit"].size() > 0)
+            GroundSurface_p->drawExit(Shader_p, Vbos_p, exitPoint);
     Ship_p->update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
     
     for (glm::vec2 &gwells : Ship_p->centerOfGravity)
@@ -140,10 +143,12 @@ void Game::Update(GLfloat deltaTime)
     
     for (Spaceship &gunna : Guns)
         gunna.updateGunner(Vbos_p, Shader_p, PShader_p, Ship_p, deltaTime);
-    
+    int surfaIndex = 0;
     for (Surface2 &surfa : Surfaces) {
+        printf("surfaIndex = %d\n", surfaIndex);
         surfa.draw();
-        surfa.checkBoundary(1);
+        surfa.checkBoundary();
+        surfaIndex++;
     }
     
 //    for (GLuint &indexa : levelSurfacesIndexes[currentLevel]) {
@@ -176,7 +181,7 @@ void Game::UpdateGate(GLfloat deltaTime)
         GLfloat gateThickness = 0.003f;
 
         Gate.draw(gateColor, gateThickness);
-        Gate.checkBoundary(1);
+        Gate.checkBoundary();
     }
 }
 
@@ -248,7 +253,7 @@ void Game::InitSurfaces() {
     Surfaces.clear();
     for(int i=0; i < levelVertNames[currentLevel].size(); i++) {
         Surface2 obj;
-        obj.init((GLuint) Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size()/2, Levels[currentLevel].Level[levelVertNames[currentLevel][i]], Ship_p, Guns_p, LShader_p, Levels[currentLevel].VAOS[i], GL_LINE_STRIP);
+        obj.init((GLuint) Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size()/2, Levels[currentLevel].Level[levelVertNames[currentLevel][i]], Ship_p, Guns_p, LShader_p, Levels[currentLevel].VAOS[i], ShipPolarCoords);
         Surfaces.push_back(obj);
         //------------------------
 //        std::cout << "current level = " << currentLevel << std::endl;
@@ -261,7 +266,7 @@ void Game::InitSurfaces() {
         
         
     }
-    Gate.init((GLuint) Levels[currentLevel].Level["VERT_gate"].size()/2, Levels[currentLevel].Level["VERT_gate"], Ship_p, Guns_p, LShader_p, Levels[currentLevel].gateVAO, GL_LINE_STRIP);
+    Gate.init((GLuint) Levels[currentLevel].Level["VERT_gate"].size()/2, Levels[currentLevel].Level["VERT_gate"], Ship_p, Guns_p, LShader_p, Levels[currentLevel].gateVAO, ShipPolarCoords);
     
 }
 

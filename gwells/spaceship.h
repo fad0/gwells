@@ -114,7 +114,7 @@ public:
     GLuint incrementer = 0;
     GLuint randomNumber = 1;
 
-    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 90, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.04f, 0.04f))
+    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 0, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.04f, 0.04f))
     {
         xpos = 0.0f;
         ypos = 0.0f;
@@ -141,7 +141,7 @@ public:
         lastypos = ypos;
         xaspeed = 0;
         yaspeed = 0;
-        DirAngle = 90;
+        DirAngle = 0;
         GunRotation = gunRotation;
         Direction = glm::radians((float) DirAngle);
         Draw = true;
@@ -380,13 +380,14 @@ public:
         
         // store existing photons
         if (shootPhoton == true and photonTimer >= photonRate) {
+            // incrementor is used to randomize each gunner photon fire rate
             if ( incrementer < randomNumber) {
                 photonTimer = 0;
                 incrementer++;
             } else {
                 photons[pQueue][0] = xpos;
                 photons[pQueue][1] = ypos;
-                photons[pQueue][2] = photonAngle;
+                photons[pQueue][2] = Direction;
                 photons[pQueue][3] = photonDuration;
                 pQueue = ++pQueue % maxPhotons;
                 photonTimer = 0;
@@ -407,8 +408,8 @@ public:
         for ( int i=0; i < maxPhotons; i++) {
             if (photons[i][3] > 0) {
                 
-                photons[i][0] += photonSpeed * deltaTime * cos(glm::radians((float) photons[i][2]));
-                photons[i][1] += photonSpeed * deltaTime * sin(glm::radians((float) photons[i][2]));
+                photons[i][0] += photonSpeed * deltaTime * cos(photons[i][2]);
+                photons[i][1] += photonSpeed * deltaTime * sin(photons[i][2]);
                 pShader->use();
                 glBindVertexArray(vbos_p->pVAO);
                 glEnable(GL_PROGRAM_POINT_SIZE);

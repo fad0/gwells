@@ -28,7 +28,8 @@ class Surface2
     GLfloat slope;
     GLfloat yIntercept;
     glm::vec3 surfaceScaleFactor = glm::vec3(1.0f, 1.0f, 1.0f);
-    
+    const GLfloat photonMaxDistance = 2.828f; // screen diagonal is 2 * sqrt(2)
+ 
 public:
 //    glm::vec2 Position;
     GLuint NumOfVertices;
@@ -39,7 +40,9 @@ public:
     std::vector<Spaceship> * Guns_P;
     Shader * sShader;
     GLuint Vao;
-    GLuint DrawArraySpecifier;
+    
+    // Polar coords for Ship vertices
+    std::vector<GLfloat> ShipPolarCoords;
     
     
 //    Spaceship * Gunner2_p;
@@ -59,7 +62,7 @@ public:
 ////        Gunner2_p = gunner2_p;
 //    }
     
-    void init(const GLuint numOfVertices, std::vector<GLfloat> skyVerts_v, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, GLuint drawArraySpecifier)
+    void init(const GLuint numOfVertices, std::vector<GLfloat> skyVerts_v, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, std::vector<GLfloat> shipPolarCoords)
     {
         NumOfVertices = numOfVertices;
         //        Vbos_vertices_p = vbos_vertices_p;
@@ -68,12 +71,78 @@ public:
         Guns_P = Guns_p;
         Vao = vao;
         sShader = shader;
-        DrawArraySpecifier = drawArraySpecifier;
+        ShipPolarCoords = shipPolarCoords;
     }
     
     // Continuous surfaces use GL_LINE_STRIP so vertexIncrement = 1
     // Island surfaces use GL_LINES so vertexIncrement = 2
-    void checkBoundary(GLuint vertexIncrement)
+    void checkBoundary()
+    {
+        // For each line segment of the "surface" check if ship has impacted it
+        // http://www.cs.swan.ac.uk/~cssimon/line_intersection.html
+        // equation derivation for intersection of two line segments.
+        if (Ship_pntr->Draw == true) {
+            for (int j=0; j < ShipPolarCoords.size(); j+=2){
+                // Calculate ship vertices rotated positions and scale
+                GLfloat theta1 = ShipPolarCoords[(j + 1) % ShipPolarCoords.size()] + Ship_pntr->Direction;
+                GLfloat theta2 = ShipPolarCoords[(j + 3) % ShipPolarCoords.size()] + Ship_pntr->Direction;
+                
+                GLfloat x1_rot = ShipPolarCoords[(j + 0) % ShipPolarCoords.size()] * cos(theta1) * Ship_pntr->Shape.x;
+                GLfloat x2_rot = ShipPolarCoords[(j + 2) % ShipPolarCoords.size()] * cos(theta2) * Ship_pntr->Shape.x;
+                GLfloat y1_rot = ShipPolarCoords[(j + 0) % ShipPolarCoords.size()] * sin(theta1) * Ship_pntr->Shape.y;
+                GLfloat y2_rot = ShipPolarCoords[(j + 2) % ShipPolarCoords.size()] * sin(theta2) * Ship_pntr->Shape.y;
+                
+                // Transpose to actual location
+                GLfloat x1 = x1_rot + Ship_pntr->xpos;
+                GLfloat y1 = y1_rot + Ship_pntr->ypos;
+                GLfloat x2 = x2_rot + Ship_pntr->xpos;
+                GLfloat y2 = y2_rot + Ship_pntr->ypos;
+//                printf("x1 = %3.3f  y1 = %3.3f  x2 = %3.3f  y2 = %3.3f\n", x1, y1, x2, y2);
+                
+//                if (j = 0) {
+//                    GLfloat xPhotonStart = x1;
+//                    GLfloat yPhotonStart = y1;
+//                    GLfloat xPhotonEnd_rot = photonMaxDistance * cos(theta1);
+//                    GLfloat yPhotonEnd_rot = photonMaxDistance * sin(theta1);
+//                    GLfloat xPhotonEnd = xPhotonEnd_rot + Ship_pntr->xpos;
+//                    GLfloat yPhotonEnd = yPhotonEnd_rot + Ship_pntr->xpos;
+//                }
+
+                
+                for (int i=0; i < NumOfVertices - 1; i++) {
+                    // first get the start and end points for each surface segment
+                        GLfloat x3 = SkyVerts_v[(i * 2)] + xPan;
+                        GLfloat y3 = SkyVerts_v[(i * 2) + 1];
+                        GLfloat x4 = SkyVerts_v[(i * 2) + 2] + xPan;
+                        GLfloat y4 = SkyVerts_v[(i * 2) + 3];
+//                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
+                    
+                    GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
+                    
+                    if ( denominator != 0 ) {
+                        GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
+                        GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
+//                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
+                        if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
+                            printf("I'm in!\n");
+                            Ship_pntr->explodeShip = true;
+                            Ship_pntr->Draw = false;
+                            Ship_pntr->playBell = true;
+                        }
+                    }
+                    
+                    
+                    checkPhotons(x3, y3, x4, y4, slope, yIntercept, Ship_pntr, false);
+                    for (Spaceship &gunna : *Guns_P) {
+                        checkPhotons(x3, y3, x4, y4, slope, yIntercept, &gunna, true);
+                    }
+                    //            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Gunner2_p, true);
+                }
+            }
+        }
+    }
+    
+    void checkBoundary2(GLuint vertexIncrement)
     {
         // For each line segment of the "surface" check if ship has impacted it
         // All surface segments are drawn from left to right or in a clockwise order
@@ -134,7 +203,7 @@ public:
             for (Spaceship &gunna : *Guns_P) {
                 checkPhotons(x1, y1, x2, y2, slope, yIntercept, &gunna, true);
             }
-//            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Gunner2_p, true);
+            //            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Gunner2_p, true);
         }
     }
     
@@ -159,7 +228,7 @@ public:
         sShader->setMat4("view", view);
         sShader->setVec3("aColor", gateColor);
         sShader->setFloat("aThickness", gateThickness);
-        glDrawArrays(DrawArraySpecifier, 0, NumOfVertices);
+        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
 //        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
     }
     

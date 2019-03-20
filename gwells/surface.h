@@ -41,6 +41,8 @@ public:
     GLuint DrawArraySpecifier;
     
     
+    
+    
 //    Spaceship * Gunner2_p;
     
     Surface (const GLuint numOfVertices, GLfloat * vbos_vertices_p, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, GLuint drawArraySpecifier)

@@ -54,7 +54,7 @@ void Game::Init()
     ShipPolarCoords = vbos.getShipPolarCoords();
     
     // Load all Levels
-    GameLevel level1("/Users/dirk/games/gwells/levels/fp3.txt"); level1.Load();
+    GameLevel level1("/Users/dirk/games/gwells/levels/level3.txt"); level1.Load();
 //    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
 //    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
 //    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
@@ -104,15 +104,8 @@ void Game::Init()
 //        std::cout << "ship.y = " << Levels[i].Level["VERT_ship"][1] << std::endl;
     }
 
-    // Ship Object and Pointer for passing to asteriod and attacker objects
-    static Spaceship ship;
-    Ship_p = &ship;
-    // Initialize ship
-//    ship.init(0.0, 0.00, 0.0);
-    ship.init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
-    Ship_v.clear();
-    Ship_v.push_back(ship);
-    Ship_vp = &Ship_v;
+    // Initialize first Level
+    this->InitShip();
     
     // Initialize first Level
     this->InitGuns();
@@ -139,9 +132,9 @@ void Game::Update(GLfloat deltaTime)
     if (exitPoints.size() > 0)
         if (Levels[currentLevel].Level["VERT_exit"].size() > 0)
             GroundSurface_p->drawExit(Shader_p, Vbos_p, exitPoint);
-    Ship_p->update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
+    Ship[0].update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
     
-    for (glm::vec2 &gwells : Ship_p->centerOfGravity)
+    for (glm::vec2 &gwells : Ship[0].centerOfGravity)
         GroundSurface_p->drawBluehole(Shader_p, Vbos_p, gwells);
     
     for (Spaceship &gunna : Guns)
@@ -151,7 +144,7 @@ void Game::Update(GLfloat deltaTime)
 
         surfa.draw();
         surfa.checkBoundary();
-        surfa.checkPhotons2();
+        surfa.checkPhotons(Ship_p);
         surfa.checkPhotons(Guns_p);
         printf("Checking Ship photons\n");
         
@@ -189,7 +182,7 @@ void Game::UpdateGate(GLfloat deltaTime)
 
         Gate.draw(gateColor, gateThickness);
         Gate.checkBoundary();
-        Gate.checkPhotons2();
+        Gate.checkPhotons(Ship_p);
         Gate.checkPhotons(Guns_p);
     }
 }
@@ -198,21 +191,21 @@ void Game::UpdateGate(GLfloat deltaTime)
 //--------------------------
 void Game::CheckStatus()
 {
-    if (Ship_p->explodeShip == true) {
-        if (Ship_p->shipsLeft == 0) {
+    if (Ship[0].explodeShip == true) {
+        if (Ship[0].shipsLeft == 0) {
             Gameover = true;
-        } else Ship_p->latchExplodeShip = true;
+        } else Ship[0].latchExplodeShip = true;
     }
     
     // wait until ship finishes exploding before instantiating new one
-    if (Ship_p->explodeShip == false and Ship_p->latchExplodeShip == true) {
-        Ship_p->shipsLeft--;
-        Ship_p->init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
-        Ship_p->latchExplodeShip = false;
+    if (Ship[0].explodeShip == false and Ship[0].latchExplodeShip == true) {
+        Ship[0].shipsLeft--;
+        Ship[0].init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
+        Ship[0].latchExplodeShip = false;
     }
     
     if (drawGate == false) {
-        if ( abs(Ship_p->xpos - exitPoint.x) < 0.07f and abs(Ship_p->ypos - exitPoint.y) < 0.07f) {
+        if ( abs(Ship[0].xpos - exitPoint.x) < 0.07f and abs(Ship[0].ypos - exitPoint.y) < 0.07f) {
             UpdateLevel();
         }
     }
@@ -225,9 +218,11 @@ void Game::UpdateLevel()
         currentLevel++;
 //        std::cout << "currentLevel = " << currentLevel << std::endl;
 //        std::cout << "Levels.size() = " << Levels.size() << std::endl;
-//        Ship_p->init(0.5,0.5,0.0);
-        Ship_p->init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0);
-
+//        Ship[0].init(0.5,0.5,0.0);
+        
+//        Ship[0].init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0);
+        this->InitShip();
+        
         this->InitGuns();
         
         Boundary::DeleteVBO(Levels[currentLevel - 1].VAOS[0], Levels[currentLevel - 1].VBOS[0]);
@@ -244,18 +239,22 @@ void Game::UpdateLevel()
     }
 }
 
+void Game::InitShip() {
+    Ship.clear();
+    Spaceship obj;
+    obj.init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
+    Ship.push_back(obj);
+    Ship_p = &Ship;
+}
+
 void Game::InitGuns() {
     Guns.clear();
     for(int i=0; i < Levels[currentLevel].Level["VERT_guns"].size()/3; i++) {
         Spaceship obj;
         obj.init(Levels[currentLevel].Level["VERT_guns"][(i * 3)], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 1], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 2]);
-//        std::cout << "Gun vertex[0] " << Levels[currentLevel].Level["VERT_guns"][(i * 3)] << std::endl;
-//        std::cout << "Gun vertex[1] " << Levels[currentLevel].Level["VERT_guns"][(i * 3)+1] << std::endl;
-//        std::cout << "Gun vertex[2] " << Levels[currentLevel].Level["VERT_guns"][(i * 3)+2] << std::endl;
         Guns.push_back(obj);
     }
     Guns_p = &Guns;
-//    Gun = 0;
 }
 
 
@@ -265,33 +264,13 @@ void Game::InitSurfaces() {
         Surface2 obj;
         obj.init((GLuint) Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size()/2, Levels[currentLevel].Level[levelVertNames[currentLevel][i]], Ship_p, LShader_p, Levels[currentLevel].VAOS[i], ShipPolarCoords);
         Surfaces.push_back(obj);
-        //------------------------
-//        std::cout << "current level = " << currentLevel << std::endl;
-//        std::cout << "levelVertNames[][i] = " << levelVertNames[currentLevel][i] << std::endl;
-//        std::cout << "levelVertNames[].size() = " << levelVertNames[currentLevel].size() << std::endl;
-//        
-//        std::cout << "Levels[].Level[name].size = " << Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size() << std::endl;
-//        std::cout << "Levels[currentLevel].VAOS[i] = " << Levels[currentLevel].VAOS[i] << std::endl;
-        //------------------------
-        
-        
     }
     Gate.init((GLuint) Levels[currentLevel].Level["VERT_gate"].size()/2, Levels[currentLevel].Level["VERT_gate"], Ship_p, LShader_p, Levels[currentLevel].gateVAO, ShipPolarCoords);
-    
 }
 
-//void Game::InitSurfaces() {
-//    Surfaces.clear();
-//    for(int i=0; i < levelSurfacesIndexes[currentLevel].size(); i++) {
-//        Surface2 obj;
-//        obj.init((GLuint) Levels[currentLevel].Level[Levels[currentLevel].vboName[i]].size()/2, Levels[currentLevel].Level[Levels[currentLevel].vboName[i]], Ship_p, Guns_p, LShader_p, Levels[currentLevel].VAOS[i], GL_LINE_STRIP);
-//        Surfaces.push_back(obj);
-//    }
-//}
-
 void Game::InitGravity() {
-    Ship_p->centerOfGravity.clear();
-    Ship_p->gravityStrength.clear();
+    Ship[0].centerOfGravity.clear();
+    Ship[0].gravityStrength.clear();
     glm::vec2 centerOfG;
     GLfloat gstrength;
     for(int i=0; i < Levels[currentLevel].Level["VERT_cofg"].size()/3; i++) {
@@ -300,8 +279,8 @@ void Game::InitGravity() {
 //        std::cout << "cofg vertex[0] " << Levels[currentLevel].Level["VERT_cofg"][(i * 3)] << std::endl;
 //        std::cout << "cofg vertex[1] " << Levels[currentLevel].Level["VERT_cofg"][(i * 3)+1] << std::endl;
 //        std::cout << "cofg vertex[2] " << Levels[currentLevel].Level["VERT_cofg"][(i * 3)+2] << std::endl;
-        Ship_p->centerOfGravity.push_back(centerOfG);
-        Ship_p->gravityStrength.push_back(gstrength);
+        Ship[0].centerOfGravity.push_back(centerOfG);
+        Ship[0].gravityStrength.push_back(gstrength);
     }
 }
 
@@ -311,15 +290,15 @@ void Game::ProcessInput(GLFWwindow *window, GLfloat deltaTime)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        Ship_p->ProcessKeyboard(CLOCKWISE, deltaTime);
+        Ship[0].ProcessKeyboard(CLOCKWISE, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        Ship_p->ProcessKeyboard(COUNTERCLOCKWISE, deltaTime);
+        Ship[0].ProcessKeyboard(COUNTERCLOCKWISE, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        Ship_p->ProcessKeyboard(BURN, deltaTime);
+        Ship[0].ProcessKeyboard(BURN, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
-        Ship_p->ProcessKeyboard(NOBURN, deltaTime);
+        Ship[0].ProcessKeyboard(NOBURN, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-        Ship_p->ProcessKeyboard(PHOTON, deltaTime);
+        Ship[0].ProcessKeyboard(PHOTON, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE)
-        Ship_p->ProcessKeyboard(NOPHOTON, deltaTime);
+        Ship[0].ProcessKeyboard(NOPHOTON, deltaTime);
 }

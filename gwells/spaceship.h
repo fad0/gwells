@@ -264,7 +264,7 @@ public:
         }
     }
     
-    void updateGunner(Vbos * vbos_p, Shader * shader, Shader * pShader, Spaceship * ship_p, GLfloat deltaTime)
+    void updateGunner(Vbos * vbos_p, Shader * shader, Shader * pShader, std::vector<Spaceship> * ship_p, GLfloat deltaTime)
     {
         //        std::cout << "init: " << Axpos << "\n";
         if (Draw == true) {
@@ -290,18 +290,19 @@ public:
             glBindVertexArray(vbos_p->cannonVAO);
             glDrawArrays(GL_TRIANGLES, 0, 6);
             
-            
-            for ( int j=0; j < ship_p->photons.size(); j++) {
-                if (ship_p->photons[j][3] > 0)  {
-                    if (ship_p->photons[j][0] > xpos - Shape.x/2 and ship_p->photons[j][0] < xpos + Shape.x/2 and ship_p->photons[j][1] > ypos - Shape.y/2 and ship_p->photons[j][1] < ypos + Shape.y/2) {
-                        Draw = false;
-                        ship_p->photons[j][3] = -0.01f;  // photon destroyed in the collision
-//                        score += attackerPoints; // each attacker destroyed is worth 10 points
-//                        scoreLevel += attackerPoints;
-                        playBell = true;
-                        explodeShip = true;
-                        //                        snd->stop();
-                        //                        engine->stop("/Users/dirk/games/media/sirenwawa.wav");
+            for (Spaceship &shipa : *ship_p) {
+                for ( int j=0; j < shipa.photons.size(); j++) {
+                    if (shipa.photons[j][3] > 0)  {
+                        if (shipa.photons[j][0] > xpos - Shape.x/2 and shipa.photons[j][0] < xpos + Shape.x/2 and shipa.photons[j][1] > ypos - Shape.y/2 and shipa.photons[j][1] < ypos + Shape.y/2) {
+                            Draw = false;
+                            shipa.photons[j][3] = -0.01f;  // photon destroyed in the collision
+                            //                        score += attackerPoints; // each attacker destroyed is worth 10 points
+                            //                        scoreLevel += attackerPoints;
+                            playBell = true;
+                            explodeShip = true;
+                            //                        snd->stop();
+                            //                        engine->stop("/Users/dirk/games/media/sirenwawa.wav");
+                        }
                     }
                 }
             }

@@ -65,12 +65,11 @@ public:
     Vbos * vbos_line_p;
     Vbos * vbos_skyIsland_p;
     Vbos * vbos_gate_p;
-    Spaceship * Ship_p;
-    std::vector<Spaceship> Ship_v;
-    std::vector<Spaceship> * Ship_vp;
+//    Spaceship * Ship_p;
+    std::vector<Spaceship> Ship;
+    std::vector<Spaceship> * Ship_p;
     std::vector<Spaceship> Guns;
     std::vector<Spaceship> * Guns_p;
-    GLuint Gun;
     
     Surface2 * GroundSurface_p;
     Surface2 * SkyIslandSurface_p;
@@ -100,8 +99,9 @@ public:
     std::vector<GLfloat> ShipPolarCoords;
     
     void Init();
-    void InitSurfaces();
+    void InitShip();
     void InitGuns();
+    void InitSurfaces();
     void Update(GLfloat dt);
     void ProcessInput(GLFWwindow *window, GLfloat deltaTime);
     void UpdateGate(GLfloat deltaTime);

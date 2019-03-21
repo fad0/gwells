@@ -65,9 +65,9 @@ public:
         // All surface segments are drawn from left to right or in a clockwise order
         for (int i=0; i < NumOfVertices - 1; i += vertexIncrement) {
             // first get the start and end points for the segment
-            GLfloat x1 = Vbos_vertices_p[(i * 2)] + xPan;
+            GLfloat x1 = Vbos_vertices_p[(i * 2)];
             GLfloat y1 = Vbos_vertices_p[(i * 2) + 1];
-            GLfloat x2 = Vbos_vertices_p[(i * 2) + 2] + xPan;
+            GLfloat x2 = Vbos_vertices_p[(i * 2) + 2];
             GLfloat y2 = Vbos_vertices_p[(i * 2) + 3];
             GLfloat dx = x2 - x1;
             GLfloat dy = y2 - y1;
@@ -136,7 +136,7 @@ public:
         
         glm::mat4 view = glm::mat4(1.0f);
         // note that we're translating the scene in the reverse direction of where we want to move
-        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
+//        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
 //        model = glm::translate(model, glm::vec3(gateTrans, 0.0f));
 //        model = glm::rotate(model, glm::radians((float)gateRot), glm::vec3(0.0f, 0.0f, 1.0f));
 //        model = glm::rotate(model, glm::radians((float)glfwGetTime()*20), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -176,40 +176,37 @@ public:
     // Stop all photons from passing through the surfaces
     void checkPhotons(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat slope, GLfloat yIntercept,Spaceship * anyShip_pntr, GLboolean panEnable)
     {
-        GLfloat localxPan;
-        if (panEnable == true) localxPan = xPan;
-        else localxPan = 0.0f;
         // Now check if photons have hit surface boundaries, if so stop drawing them
         for ( int j=0; j < maxPhotons; j++) {
             if (anyShip_pntr->photons[j][3] > 0)  {
                 if ( x2 - x1 > 0.00001) {
                     //                            std::cout << "I'm in 1\n";
-                    if (anyShip_pntr->photons[j][0] + localxPan >= x1 and anyShip_pntr->photons[j][0] + localxPan < x2 and anyShip_pntr->photons[j][1] > std::min(y2, y1) - 0.02) {
+                    if (anyShip_pntr->photons[j][0] >= x1 and anyShip_pntr->photons[j][0] < x2 and anyShip_pntr->photons[j][1] > std::min(y2, y1) - 0.02) {
                         //                                std::cout << "I'm in 1\n";
                         //                                std::cout << (anyShip_pntr->photons[j][1] - slope * anyShip_pntr->photons[j][0]) << std::endl;
                         //                                std::cout << "yInt: " << yIntercept << std::endl;
-                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0] + localxPan)) < yIntercept) {
+                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0])) < yIntercept) {
                             anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 < x1, then we collide from below
                 else if ( x2 - x1 < -0.00001) {
-                    if (anyShip_pntr->photons[j][0] + localxPan <= x1 and anyShip_pntr->photons[j][0] + localxPan > x2 and anyShip_pntr->photons[j][1] < std::max(y2, y1) + 0.02) {
-                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0] + localxPan)) > yIntercept) {
+                    if (anyShip_pntr->photons[j][0] <= x1 and anyShip_pntr->photons[j][0] > x2 and anyShip_pntr->photons[j][1] < std::max(y2, y1) + 0.02) {
+                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0])) > yIntercept) {
                             anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 = x1, vertical surface.  If y2 > y1, we collide from the left
                 else if ( y2 - y1 > 0.00001) {
-                    if ( anyShip_pntr->photons[j][1] >= y1 and anyShip_pntr->photons[j][1] < y2 and anyShip_pntr->photons[j][0] + localxPan < x1 + 0.02) {
-                        if (anyShip_pntr->photons[j][0] + localxPan >= x1) {
+                    if ( anyShip_pntr->photons[j][1] >= y1 and anyShip_pntr->photons[j][1] < y2 and anyShip_pntr->photons[j][0] < x1 + 0.02) {
+                        if (anyShip_pntr->photons[j][0] >= x1) {
                             anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 = x1, vertical surface.  If y2 < y1, we collide from the right
                 else if ( y2 - y1 < -0.00001) {
-                    if ( anyShip_pntr->photons[j][1] <= y1 and anyShip_pntr->photons[j][1] > y2 and anyShip_pntr->photons[j][0] + localxPan > x1 - 0.02) {
-                        if (anyShip_pntr->photons[j][0] + localxPan <= x1) {
+                    if ( anyShip_pntr->photons[j][1] <= y1 and anyShip_pntr->photons[j][1] > y2 and anyShip_pntr->photons[j][0] > x1 - 0.02) {
+                        if (anyShip_pntr->photons[j][0] <= x1) {
                             anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
@@ -230,7 +227,6 @@ public:
         
         glm::mat4 view = glm::mat4(1.0f);
         // note that we're translating the scene in the reverse direction of where we want to move
-        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
         model = glm::translate(model, glm::vec3(position, 0.0f));
         //        model = glm::rotate(model, glm::radians((float)gateRot), glm::vec3(0.0f, 0.0f, 1.0f));
         //        model = glm::rotate(model, glm::radians((float)glfwGetTime()*20), glm::vec3(0.0f, 0.0f, 1.0f));

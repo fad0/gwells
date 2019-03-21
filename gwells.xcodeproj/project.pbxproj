@@ -41,7 +41,6 @@
 		436B8C33223788DF00663942 /* game_level.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = game_level.cpp; sourceTree = "<group>"; };
 		436B8C34223788DF00663942 /* game_level.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_level.h; sourceTree = "<group>"; };
 		436B8C35223788DF00663942 /* spaceship.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spaceship.h; sourceTree = "<group>"; };
-		436B8C36223788DF00663942 /* surface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface.h; sourceTree = "<group>"; };
 		436B8C37223788DF00663942 /* vbos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vbos.h; sourceTree = "<group>"; };
 		436B8C3A223A4DB100663942 /* boundary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundary.h; sourceTree = "<group>"; };
 		436B8C3B223A4DB100663942 /* surface2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface2.h; sourceTree = "<group>"; };
@@ -92,7 +91,6 @@
 				436B8C3A223A4DB100663942 /* boundary.h */,
 				436B8C3B223A4DB100663942 /* surface2.h */,
 				436B8C35223788DF00663942 /* spaceship.h */,
-				436B8C36223788DF00663942 /* surface.h */,
 				436B8C37223788DF00663942 /* vbos.h */,
 			);
 			path = gwells;

@@ -38,9 +38,6 @@ static const GLfloat gunnerScale = 0.07f;
 static const glm::vec2 gunnerScaleVec = glm::vec2(gunnerScale, gunnerScale);
 static const GLfloat gunnerHeight = 0.45f * gunnerScale;
 
-//!!!!!!!!!!!REMOVE LATER!!!!!!!!!!!!!!!!!!!!!
-const GLfloat xPan = 0.0f;
-
 
 // Used as abstraction to stay away from window-system specific input methods
 enum Ship_Action {
@@ -219,12 +216,12 @@ public:
                 glDrawArrays(GL_TRIANGLES, 0, 3);
             }
             
-            updatePhotons(firePhoton, true, vbos_p, pShader, false, 0.25f, Direction, deltaTime, false);
+            updatePhotons(firePhoton, true, vbos_p, pShader, 0.25f, Direction, deltaTime, false);
 
             for (Spaceship &gunna : *Guns_p) {
                 for ( int j=0; j < gunna.photons.size(); j++) {
                     if (gunna.photons[j][3] > 0)  {
-                        if (gunna.photons[j][0] + xPan > xpos - Shape.x/2 and gunna.photons[j][0] + xPan < xpos + Shape.x/2 and gunna.photons[j][1] > ypos - Shape.y/2 and gunna.photons[j][1] < ypos + Shape.y/2) {
+                        if (gunna.photons[j][0] > xpos - Shape.x/2 and gunna.photons[j][0] < xpos + Shape.x/2 and gunna.photons[j][1] > ypos - Shape.y/2 and gunna.photons[j][1] < ypos + Shape.y/2) {
                             Draw = false;
                             gunna.photons[j][3] = -0.01f;  // photon destroyed in the collision
                             explodeShip = true;
@@ -277,21 +274,15 @@ public:
                 playSiren = false;
             }
             
-            GLfloat xposTranslated = xpos + xPan;
-            
-//            GLfloat photonRate = ((rand() % 4)/10) + 0.5f;
-            
-            updatePhotons(true, false, vbos_p, pShader, true, 0.1f, GunRotation, deltaTime, true);
+            updatePhotons(true, false, vbos_p, pShader, 0.1f, GunRotation, deltaTime, true);
             
             shader->use();
             glBindVertexArray(vbos_p->gunnerVAO);
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(xposTranslated, ypos, 0.0f));
+            model = glm::translate(model, glm::vec3(xpos, ypos, 0.0f));
             model = glm::scale(model, glm::vec3(gunnerScaleVec, 0.0f));
             model = glm::rotate(model, glm::radians((GLfloat) GunRotation), glm::vec3(0.0f, 0.0f, 1.0f));
             //        glm::mat4 view = glm::mat4(1.0f);
-            // note that we're translating the scene in the reverse direction of where we want to move
-            //        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
             shader->setMat4("model", model);
             //        shader.setMat4("view", view);
             shader->setVec3("aColor", glm::vec3(1.0f, 0.0f, 0.0f));
@@ -302,7 +293,7 @@ public:
             
             for ( int j=0; j < ship_p->photons.size(); j++) {
                 if (ship_p->photons[j][3] > 0)  {
-                    if (ship_p->photons[j][0] > xposTranslated - Shape.x/2 and ship_p->photons[j][0] < xposTranslated + Shape.x/2 and ship_p->photons[j][1] > ypos - Shape.y/2 and ship_p->photons[j][1] < ypos + Shape.y/2) {
+                    if (ship_p->photons[j][0] > xpos - Shape.x/2 and ship_p->photons[j][0] < xpos + Shape.x/2 and ship_p->photons[j][1] > ypos - Shape.y/2 and ship_p->photons[j][1] < ypos + Shape.y/2) {
                         Draw = false;
                         ship_p->photons[j][3] = -0.01f;  // photon destroyed in the collision
 //                        score += attackerPoints; // each attacker destroyed is worth 10 points
@@ -335,7 +326,7 @@ public:
     // ship:   updatePhotons(firePhoton, true, vbos_p, pShader, false, 0.25f, DirAngle, deltaTime, false);
     // gunner: updatePhotons(true, false, vbos_p, pShader, true, 0.1f, photonAngle, deltaTime, true);
     
-    void updatePhotons(GLboolean shootPhoton, GLboolean enablePhotonSound , Vbos * vbos_p, Shader * pShader, GLboolean panPhotons, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime, GLboolean isGunner)
+    void updatePhotons(GLboolean shootPhoton, GLboolean enablePhotonSound, Vbos * vbos_p, Shader * pShader, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime, GLboolean isGunner)
     {
         
         // store existing photons
@@ -406,9 +397,7 @@ public:
                 glEnable(GL_PROGRAM_POINT_SIZE);
                 glm::mat4 model = glm::mat4(1.0f);
                 //        model = glm::translate(model, glm::vec3(photons[pcounter][0], photons[pcounter][0], 0.0f));
-                if (panPhotons == true) {
-                    model = glm::translate(model, glm::vec3(photona[0] + xPan, photona[1], 0.0f));
-                } else model = glm::translate(model, glm::vec3(photona[0], photona[1], 0.0f));
+                model = glm::translate(model, glm::vec3(photona[0], photona[1], 0.0f));
                 
                 pShader->setMat4("model", model);
                 //                    shader.setFloat("aPointSize", 4.0f);

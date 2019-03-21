@@ -20,9 +20,6 @@
 #include <math.h>
 #include <vector>
 
-//!!!!!!!!!!!REMOVE LATER!!!!!!!!!!!!!!!!!!!!!
-//const GLfloat xPan = 0.0f;
-
 class Surface2
 {
     GLfloat slope;
@@ -100,9 +97,9 @@ public:
 //                printf("x1 = %3.3f  y1 = %3.3f  x2 = %3.3f  y2 = %3.3f\n", x1, y1, x2, y2);               
                 for (int i=0; i < NumOfVertices - 1; i++) {
                     // first get the start and end points for each surface segment
-                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat x3 = SurfaceVerts[(i * 2)];
                         GLfloat y3 = SurfaceVerts[(i * 2) + 1];
-                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2];
                         GLfloat y4 = SurfaceVerts[(i * 2) + 3];
 //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
                     
@@ -136,7 +133,6 @@ public:
         
         glm::mat4 view = glm::mat4(1.0f);
         // note that we're translating the scene in the reverse direction of where we want to move
-        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
 //        model = glm::translate(model, glm::vec3(gateTrans, 0.0f));
 //        model = glm::rotate(model, glm::radians((float)gateRot), glm::vec3(0.0f, 0.0f, 1.0f));
 //        model = glm::rotate(model, glm::radians((float)glfwGetTime()*20), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -170,9 +166,9 @@ public:
                     
                     for (int i=0; i < NumOfVertices - 1; i++) {
                         // first get the start and end points for each surface segment
-                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat x3 = SurfaceVerts[(i * 2)];
                         GLfloat y3 = SurfaceVerts[(i * 2) + 1];
-                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2];
                         GLfloat y4 = SurfaceVerts[(i * 2) + 3];
                         //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
                         
@@ -233,9 +229,9 @@ public:
                     
                     for (int i=0; i < NumOfVertices - 1; i++) {
                         // first get the start and end points for each surface segment
-                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat x3 = SurfaceVerts[(i * 2)];
                         GLfloat y3 = SurfaceVerts[(i * 2) + 1];
-                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2];
                         GLfloat y4 = SurfaceVerts[(i * 2) + 3];
                         //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
                         
@@ -287,11 +283,7 @@ public:
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(position, 0.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.0f));
-        
         glm::mat4 view = glm::mat4(1.0f);
-        // note that we're translating the scene in the reverse direction of where we want to move
-//        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
-        
         model = glm::rotate(model, glm::radians((float)glfwGetTime()*20), glm::vec3(0.0f, 0.0f, 1.0f));
         
         shader->setMat4("model", model);
@@ -311,13 +303,9 @@ public:
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(position, 0.0f));
         model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.0f));
-        
         glm::mat4 view = glm::mat4(1.0f);
-        // note that we're translating the scene in the reverse direction of where we want to move
-        //        view = glm::translate(view, glm::vec3(xPan, 0.0f, 0.0f));
-        
 //        model = glm::rotate(model, glm::radians((float)glfwGetTime()*20), glm::vec3(0.0f, 0.0f, 1.0f));
-        
+
         shader->setMat4("model", model);
         shader->setMat4("view", view);
         shader->setVec3("aColor", gateColor);

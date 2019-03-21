@@ -2,21 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:../gwells/game_level.cpp">
-   </FileRef>
-   <FileRef
-      location = "group:../gwells/game_level.h">
-   </FileRef>
-   <FileRef
-      location = "group:../gwells/spaceship.h">
-   </FileRef>
-   <FileRef
-      location = "group:../gwells/surface.h">
-   </FileRef>
-   <FileRef
-      location = "group:../gwells/vbos.h">
-   </FileRef>
-   <FileRef
       location = "self:">
    </FileRef>
 </Workspace>

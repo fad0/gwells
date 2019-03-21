@@ -76,10 +76,12 @@ class Spaceship
     GLuint pQueue = 0;
     GLfloat photonSpeed = 1.5f; // how fast photons move
     GLfloat photonDuration = 2.0f;  // how long they last
+    const GLfloat photonMaxDistance = 2.828f; // screen diagonal is 2 * sqrt(2)
     GLfloat photonTimer = 0.0f;  // determines how quickly photons can be repeatedly fired
 //    const GLfloat photonRate = 0.50f; // determines how quickly photons can be repeatedly fired
     GLboolean firePhoton = false;
 //    GLboolean enablePhotonSound = false;
+    GLboolean isGunner;  // enables random firing of photons for all gunners
     
 public:
 //    GLfloat gravityStrength = 0.000002f;
@@ -107,14 +109,17 @@ public:
     GLfloat explodeTime = 0.0f;
     GLuint shipsLeft = initialShipCount;
     GLboolean playBell = false;
-    glm::vec4 photons[maxPhotons]; // 0-xpos, 1-ypos, 2-direction, 3-duration
-    
+    std::vector<std::vector<GLfloat>> photons;
+    // Inside vector holds photon params : 0-xpos, 1-ypos, 2-direction, 3-duration,
+    // 4-start xpos, 5-start ypos, 6-end xpos (virtual), 7-end ypos (virtual), 8-new photon indicator,
+    // 9-photonMaxDistance = 2 * sqrt(2) -> this will be replaced by distane to nearest collision surface
+
     
     GLboolean playSiren = false;
     GLuint incrementer = 0;
     GLuint randomNumber = 1;
 
-    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 0, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.04f, 0.04f))
+    Spaceship (glm::vec2 position = glm::vec2(0.0f, 0.0f), GLint dirangle = 90, GLboolean draw = true, glm::vec2 shape = glm::vec2(0.04f, 0.04f))
     {
         xpos = 0.0f;
         ypos = 0.0f;
@@ -141,13 +146,12 @@ public:
         lastypos = ypos;
         xaspeed = 0;
         yaspeed = 0;
-        DirAngle = 0;
+        DirAngle = 90;
         GunRotation = gunRotation;
         Direction = glm::radians((float) DirAngle);
         Draw = true;
         explodeShip = false;
         explodeTime = 0;
-        for (int i=0; i < maxPhotons; i++) photons[i] = glm::vec4(0.0f, 0.0f, 0.0f, -1.0f);
     }
 
     void update(Vbos * vbos_p, Shader * shader, Shader * pShader, std::vector<Spaceship> * Guns_p, GLfloat deltaTime)
@@ -215,14 +219,14 @@ public:
                 glDrawArrays(GL_TRIANGLES, 0, 3);
             }
             
-            updatePhotons2(firePhoton, true, vbos_p, pShader, false, 0.25f, DirAngle, deltaTime);
+            updatePhotons(firePhoton, true, vbos_p, pShader, false, 0.25f, Direction, deltaTime, false);
 
             for (Spaceship &gunna : *Guns_p) {
-                for ( int j=0; j < maxPhotons; j++) {
-                    if (gunna.photons[j].w > 0)  {
-                        if (gunna.photons[j].x + xPan > xpos - Shape.x/2 and gunna.photons[j].x + xPan < xpos + Shape.x/2 and gunna.photons[j].y > ypos - Shape.y/2 and gunna.photons[j].y < ypos + Shape.y/2) {
+                for ( int j=0; j < gunna.photons.size(); j++) {
+                    if (gunna.photons[j][3] > 0)  {
+                        if (gunna.photons[j][0] + xPan > xpos - Shape.x/2 and gunna.photons[j][0] + xPan < xpos + Shape.x/2 and gunna.photons[j][1] > ypos - Shape.y/2 and gunna.photons[j][1] < ypos + Shape.y/2) {
                             Draw = false;
-                            gunna.photons[j].w = -0.01f;  // photon destroyed in the collision
+                            gunna.photons[j][3] = -0.01f;  // photon destroyed in the collision
                             explodeShip = true;
                             playBell = true;
                         }
@@ -274,10 +278,10 @@ public:
             }
             
             GLfloat xposTranslated = xpos + xPan;
-            GLfloat photonAngle = GLfloat(rand() % 90 + 45) + GunRotation;
+            
 //            GLfloat photonRate = ((rand() % 4)/10) + 0.5f;
             
-            updatePhotons(true, false, vbos_p, pShader, true, 0.1f, photonAngle, deltaTime);
+            updatePhotons(true, false, vbos_p, pShader, true, 0.1f, GunRotation, deltaTime, true);
             
             shader->use();
             glBindVertexArray(vbos_p->gunnerVAO);
@@ -296,11 +300,11 @@ public:
             glDrawArrays(GL_TRIANGLES, 0, 6);
             
             
-            for ( int j=0; j < maxPhotons; j++) {
-                if (ship_p->photons[j].w > 0)  {
-                    if (ship_p->photons[j].x > xposTranslated - Shape.x/2 and ship_p->photons[j].x < xposTranslated + Shape.x/2 and ship_p->photons[j].y > ypos - Shape.y/2 and ship_p->photons[j].y < ypos + Shape.y/2) {
+            for ( int j=0; j < ship_p->photons.size(); j++) {
+                if (ship_p->photons[j][3] > 0)  {
+                    if (ship_p->photons[j][0] > xposTranslated - Shape.x/2 and ship_p->photons[j][0] < xposTranslated + Shape.x/2 and ship_p->photons[j][1] > ypos - Shape.y/2 and ship_p->photons[j][1] < ypos + Shape.y/2) {
                         Draw = false;
-                        ship_p->photons[j].w = -0.01f;  // photon destroyed in the collision
+                        ship_p->photons[j][3] = -0.01f;  // photon destroyed in the collision
 //                        score += attackerPoints; // each attacker destroyed is worth 10 points
 //                        scoreLevel += attackerPoints;
                         playBell = true;
@@ -318,7 +322,7 @@ public:
                 //                std::cout << "\nI'm in!\n";
             }
             // Clear attacker photons queue or they can still cause ship to explode even though they are visable.
-            for (int i=0; i < maxPhotons; i++) photons[i][3] = -1.0;
+            for (int i=0; i < photons.size(); i++) photons[i][3] = -1.0;
             // give attacker time to explode, although it's not needed...
             explodeTime += deltaTime;
             if (explodeTime > explodeDuration) {
@@ -328,71 +332,56 @@ public:
         
     }
     
-    void updatePhotons2(GLboolean shootPhoton, GLboolean enablePhotonSound , Vbos * vbos_p, Shader * pShader, GLboolean panPhotons, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime)
-    {
-        // store existing photons
-        if (shootPhoton == true and photonTimer >= photonRate) {
-            photons[pQueue][0] = xpos;
-            photons[pQueue][1] = ypos;
-            photons[pQueue][2] = photonAngle;
-            photons[pQueue][3] = photonDuration;
-            pQueue = ++pQueue % maxPhotons;
-            photonTimer = 0;
-            if (enablePhotonSound == true) {
-                //                engine->play2D("/Users/dirk/games/media/Gun+Silencer.wav");
-            }
-        }
-        // loop timer for phonton fire rate
-        photonTimer += deltaTime;
-//        std::cout << "photonTimer = " << photonTimer << std::endl;
-        
-        
-        // calculate new postion of each existing photon and draw it
-        for ( int i=0; i < maxPhotons; i++) {
-            if (photons[i][3] > 0) {
-                
-                photons[i][0] += photonSpeed * deltaTime * cos(glm::radians((float) photons[i][2]));
-                photons[i][1] += photonSpeed * deltaTime * sin(glm::radians((float) photons[i][2]));
-                pShader->use();
-                glBindVertexArray(vbos_p->pVAO);
-                glEnable(GL_PROGRAM_POINT_SIZE);
-                glm::mat4 model = glm::mat4(1.0f);
-                //        model = glm::translate(model, glm::vec3(photons[pcounter][0], photons[pcounter][0], 0.0f));
-                if (panPhotons == true) {
-                    model = glm::translate(model, glm::vec3(photons[i][0] + xPan, photons[i][1], 0.0f));
-                } else model = glm::translate(model, glm::vec3(photons[i][0], photons[i][1], 0.0f));
-                
-                pShader->setMat4("model", model);
-                //                    shader.setFloat("aPointSize", 4.0f);
-                pShader->setVec3("aColor", glm::vec3(0.0f, 1.0f, 0.0f));
-                pShader->setFloat("aPointSize", 5.0f);
-                glDrawArrays(GL_POINTS, 0, 1);
-                glDisable(GL_PROGRAM_POINT_SIZE);
-                glBindVertexArray(0);
-                photons[i][3] -= deltaTime;
-            }
-        }
-    }
-
+    // ship:   updatePhotons(firePhoton, true, vbos_p, pShader, false, 0.25f, DirAngle, deltaTime, false);
+    // gunner: updatePhotons(true, false, vbos_p, pShader, true, 0.1f, photonAngle, deltaTime, true);
     
-    void updatePhotons(GLboolean shootPhoton, GLboolean enablePhotonSound , Vbos * vbos_p, Shader * pShader, GLboolean panPhotons, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime)
+    void updatePhotons(GLboolean shootPhoton, GLboolean enablePhotonSound , Vbos * vbos_p, Shader * pShader, GLboolean panPhotons, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime, GLboolean isGunner)
     {
         
         // store existing photons
-        if (shootPhoton == true and photonTimer >= photonRate) {
+//        printf("photons.size() 1 = %lu\n", photons.size());
+        if (shootPhoton == true and photonTimer >= photonRate and photons.size() < maxPhotons) {
             // incrementor is used to randomize each gunner photon fire rate
-            if ( incrementer < randomNumber) {
+            GLfloat xposShifted;
+            GLfloat yposShifted;
+            if ( incrementer < randomNumber and isGunner == true) {
                 photonTimer = 0;
                 incrementer++;
             } else {
-                photons[pQueue][0] = xpos;
-                photons[pQueue][1] = ypos;
-                photons[pQueue][2] = Direction;
-                photons[pQueue][3] = photonDuration;
+//                printf("in updatePhotons\n");
+                if (isGunner == true) {
+                    photonAngle = glm::radians(photonAngle + 90);
+                    
+                    xposShifted = gunnerHeight * cos(photonAngle) + xpos;
+                    yposShifted = gunnerHeight * sin(photonAngle) + ypos;
+//                    photonAngle = glm::radians(GLfloat(rand() % 90 + 45) + photonAngle);
+                    photonAngle = glm::radians(GLfloat(rand() % 90 - 45)) + photonAngle;
+                } else {
+                    xposShifted = xpos;
+                    yposShifted = ypos;
+                }
+                std::vector<GLfloat> photonParams;
+                GLfloat xPhotonEnd_rot = 2 * cos(photonAngle); //2 ia m distance in x or y
+                GLfloat yPhotonEnd_rot = 2 * sin(photonAngle); //2 ia m distance in x or y
+                photonParams.push_back(xposShifted);
+                photonParams.push_back(yposShifted);
+                photonParams.push_back(photonAngle);
+                photonParams.push_back(photonDuration);
+                photonParams.push_back(xposShifted);  //  start xpos, not updated as photon moves
+                photonParams.push_back(yposShifted);  //  start ypos, not updated as photon moves
+                photonParams.push_back(xposShifted + xPhotonEnd_rot); // endpoint of photon virtual line segment
+                photonParams.push_back(yposShifted + yPhotonEnd_rot); // endpoint of photon virtual line segment
+                photonParams.push_back(1.0); // 1.0 indicates a new photon for the collision calculations
+                photonParams.push_back(photonMaxDistance);
+                photons.push_back(photonParams);
+//                printf("photons.size() 2 = %lu\n", photons.size());
+                
                 pQueue = ++pQueue % maxPhotons;
                 photonTimer = 0;
-                incrementer = 0;
-                randomNumber = rand() % 10 + 1;
+                if (isGunner == true) {
+                    incrementer = 0;
+                    randomNumber = rand() % 10 + 1;
+                }
                 if (enablePhotonSound == true) {
                     //                engine->play2D("/Users/dirk/games/media/Gun+Silencer.wav");
                     
@@ -405,19 +394,21 @@ public:
         
         
         // calculate new postion of each existing photon and draw it
-        for ( int i=0; i < maxPhotons; i++) {
-            if (photons[i][3] > 0) {
+        for (std::vector<GLfloat> &photona : photons) {
+//            printf("photona[3] = %3.4f\n", photona[3]);
+            if (photona[3] > 0) {
+//                printf("in photon draw\n");
                 
-                photons[i][0] += photonSpeed * deltaTime * cos(photons[i][2]);
-                photons[i][1] += photonSpeed * deltaTime * sin(photons[i][2]);
+                photona[0] += photonSpeed * deltaTime * cos(photona[2]);
+                photona[1] += photonSpeed * deltaTime * sin(photona[2]);
                 pShader->use();
                 glBindVertexArray(vbos_p->pVAO);
                 glEnable(GL_PROGRAM_POINT_SIZE);
                 glm::mat4 model = glm::mat4(1.0f);
                 //        model = glm::translate(model, glm::vec3(photons[pcounter][0], photons[pcounter][0], 0.0f));
                 if (panPhotons == true) {
-                    model = glm::translate(model, glm::vec3(photons[i][0] + xPan, photons[i][1], 0.0f));
-                } else model = glm::translate(model, glm::vec3(photons[i][0], photons[i][1], 0.0f));
+                    model = glm::translate(model, glm::vec3(photona[0] + xPan, photona[1], 0.0f));
+                } else model = glm::translate(model, glm::vec3(photona[0], photona[1], 0.0f));
                 
                 pShader->setMat4("model", model);
                 //                    shader.setFloat("aPointSize", 4.0f);
@@ -426,7 +417,7 @@ public:
                 glDrawArrays(GL_POINTS, 0, 1);
                 glDisable(GL_PROGRAM_POINT_SIZE);
                 glBindVertexArray(0);
-                photons[i][3] -= deltaTime;
+                photona[3] -= deltaTime;
             }
         }
     }

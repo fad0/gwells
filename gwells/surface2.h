@@ -28,16 +28,16 @@ class Surface2
     GLfloat slope;
     GLfloat yIntercept;
     glm::vec3 surfaceScaleFactor = glm::vec3(1.0f, 1.0f, 1.0f);
-    const GLfloat photonMaxDistance = 2.828f; // screen diagonal is 2 * sqrt(2)
+    
  
 public:
 //    glm::vec2 Position;
     GLuint NumOfVertices;
+    std::vector<GLfloat> SurfaceVerts;
     GLfloat * Vbos_vertices_p;
-    std::vector<GLfloat> SkyVerts_v;
     Spaceship * Ship_pntr;
-    Spaceship * Gunner1_p;
-    std::vector<Spaceship> * Guns_P;
+//    Spaceship * Gunner1_p;
+//    std::vector<Spaceship> * Guns_P;
     Shader * sShader;
     GLuint Vao;
     
@@ -49,11 +49,11 @@ public:
     
     Surface2 () {}
     
-//    Surface2 (const GLuint numOfVertices, std::vector<GLfloat> skyVerts_v, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, GLuint drawArraySpecifier)
+//    Surface2 (const GLuint numOfVertices, std::vector<GLfloat> SurfaceVerts, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, GLuint drawArraySpecifier)
 //    {
 //        NumOfVertices = numOfVertices;
 ////        Vbos_vertices_p = vbos_vertices_p;
-//        SkyVerts_v = skyVerts_v;
+//        SurfaceVerts = SurfaceVerts;
 //        Ship_pntr = ship_pntr;
 //        Guns_P = Guns_p;
 //        Vao = vao;
@@ -62,13 +62,13 @@ public:
 ////        Gunner2_p = gunner2_p;
 //    }
     
-    void init(const GLuint numOfVertices, std::vector<GLfloat> skyVerts_v, Spaceship * ship_pntr, std::vector<Spaceship> * Guns_p, Shader * shader, GLuint vao, std::vector<GLfloat> shipPolarCoords)
+    void init(const GLuint numOfVertices, std::vector<GLfloat> surfaceVerts, Spaceship * ship_pntr, Shader * shader, GLuint vao, std::vector<GLfloat> shipPolarCoords)
     {
         NumOfVertices = numOfVertices;
         //        Vbos_vertices_p = vbos_vertices_p;
-        SkyVerts_v = skyVerts_v;
+        SurfaceVerts = surfaceVerts;
         Ship_pntr = ship_pntr;
-        Guns_P = Guns_p;
+//        Guns_P = Guns_p;
         Vao = vao;
         sShader = shader;
         ShipPolarCoords = shipPolarCoords;
@@ -97,24 +97,13 @@ public:
                 GLfloat y1 = y1_rot + Ship_pntr->ypos;
                 GLfloat x2 = x2_rot + Ship_pntr->xpos;
                 GLfloat y2 = y2_rot + Ship_pntr->ypos;
-//                printf("x1 = %3.3f  y1 = %3.3f  x2 = %3.3f  y2 = %3.3f\n", x1, y1, x2, y2);
-                
-//                if (j = 0) {
-//                    GLfloat xPhotonStart = x1;
-//                    GLfloat yPhotonStart = y1;
-//                    GLfloat xPhotonEnd_rot = photonMaxDistance * cos(theta1);
-//                    GLfloat yPhotonEnd_rot = photonMaxDistance * sin(theta1);
-//                    GLfloat xPhotonEnd = xPhotonEnd_rot + Ship_pntr->xpos;
-//                    GLfloat yPhotonEnd = yPhotonEnd_rot + Ship_pntr->xpos;
-//                }
-
-                
+//                printf("x1 = %3.3f  y1 = %3.3f  x2 = %3.3f  y2 = %3.3f\n", x1, y1, x2, y2);               
                 for (int i=0; i < NumOfVertices - 1; i++) {
                     // first get the start and end points for each surface segment
-                        GLfloat x3 = SkyVerts_v[(i * 2)] + xPan;
-                        GLfloat y3 = SkyVerts_v[(i * 2) + 1];
-                        GLfloat x4 = SkyVerts_v[(i * 2) + 2] + xPan;
-                        GLfloat y4 = SkyVerts_v[(i * 2) + 3];
+                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat y3 = SurfaceVerts[(i * 2) + 1];
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat y4 = SurfaceVerts[(i * 2) + 3];
 //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
                     
                     GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
@@ -124,74 +113,7 @@ public:
                         GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
 //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
                         if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
-                            printf("I'm in!\n");
-                            Ship_pntr->explodeShip = true;
-                            Ship_pntr->Draw = false;
-                            Ship_pntr->playBell = true;
-                        }
-                    }
-                    
-                    
-                    checkPhotons(x3, y3, x4, y4, slope, yIntercept, Ship_pntr, false);
-                    for (Spaceship &gunna : *Guns_P) {
-                        checkPhotons(x3, y3, x4, y4, slope, yIntercept, &gunna, true);
-                    }
-                    //            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Gunner2_p, true);
-                }
-            }
-        }
-    }
-    
-    void checkBoundary2(GLuint vertexIncrement)
-    {
-        // For each line segment of the "surface" check if ship has impacted it
-        // All surface segments are drawn from left to right or in a clockwise order
-        for (int i=0; i < NumOfVertices - 1; i += vertexIncrement) {
-            // first get the start and end points for the segment
-            GLfloat x1 = SkyVerts_v[(i * 2)] + xPan;
-            GLfloat y1 = SkyVerts_v[(i * 2) + 1];
-            GLfloat x2 = SkyVerts_v[(i * 2) + 2] + xPan;
-            GLfloat y2 = SkyVerts_v[(i * 2) + 3];
-            GLfloat dx = x2 - x1;
-            GLfloat dy = y2 - y1;
-            if ( dx != 0.0f) {
-                slope = dy/dx;
-            } else if (x2 > x1) {
-                slope = 1000000.0f;
-            } else slope = -1000000.0f;
-            yIntercept = y2 - x2 * slope;
-            // If x2 > x1, then we collide from above
-            if (Ship_pntr->Draw == true) {
-                if ( x2 - x1 > 0.00001) {
-                    if (Ship_pntr->xpos >= x1 and Ship_pntr->xpos < x2 and Ship_pntr->ypos > std::min(y2, y1)) {
-                        if ((Ship_pntr->ypos - slope * Ship_pntr->xpos) < (yIntercept + Ship_pntr->Shape.y/2)) {
-                            Ship_pntr->explodeShip = true;
-                            Ship_pntr->Draw = false;
-                            Ship_pntr->playBell = true;
-                        }
-                    }
-                } // if x2 < x1, then we collide from below
-                else if ( x2 - x1 < -0.00001) {
-                    if (Ship_pntr->xpos <= x1 and Ship_pntr->xpos > x2 and Ship_pntr->ypos < std::max(y2, y1)) {
-                        if ((Ship_pntr->ypos - slope * Ship_pntr->xpos) > (yIntercept - Ship_pntr->Shape.y/2)) {
-                            Ship_pntr->explodeShip = true;
-                            Ship_pntr->Draw = false;
-                            Ship_pntr->playBell = true;
-                        }
-                    }
-                } // if x2 = x1, vertical surface.  If y2 > y1, we collide from the left
-                else if ( y2 - y1 > 0.00001) {
-                    if ( Ship_pntr->ypos >= y1 and Ship_pntr->ypos < y2 and Ship_pntr->xpos < x1) {
-                        if (Ship_pntr->xpos >= x1 - Ship_pntr->Shape.x/2) {
-                            Ship_pntr->explodeShip = true;
-                            Ship_pntr->Draw = false;
-                            Ship_pntr->playBell = true;
-                        }
-                    }
-                } // if x2 = x1, vertical surface.  If y2 < y1, we collide from the right
-                else if ( y2 - y1 < -0.00001) {
-                    if ( Ship_pntr->ypos <= y1 and Ship_pntr->ypos > y2 and Ship_pntr->xpos > x1) {
-                        if (Ship_pntr->xpos <= x1 + Ship_pntr->Shape.x/2) {
+//                            printf("I'm in!\n");
                             Ship_pntr->explodeShip = true;
                             Ship_pntr->Draw = false;
                             Ship_pntr->playBell = true;
@@ -199,11 +121,6 @@ public:
                     }
                 }
             }
-            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Ship_pntr, false);
-            for (Spaceship &gunna : *Guns_P) {
-                checkPhotons(x1, y1, x2, y2, slope, yIntercept, &gunna, true);
-            }
-            //            checkPhotons(x1, y1, x2, y2, slope, yIntercept, Gunner2_p, true);
         }
     }
     
@@ -231,75 +148,135 @@ public:
         glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
 //        glDrawArrays(GL_LINE_STRIP, 0, NumOfVertices);
     }
-    
-//    void panUpdate()
-//    {
-//        // Pan Right
-//        if (Ship_pntr->xpos > 0.5) {
-//            xPan -= Ship_pntr->xpos - 0.5;
-//            Ship_pntr->xpos = 0.5f;
-//        }
-//        
-//        // Pan Left
-//        if (Ship_pntr->xpos < -0.5) {
-//            xPan -= Ship_pntr->xpos + 0.5;
-//            Ship_pntr->xpos = -0.5f;
-//        }
-//        
-//        if (xPan <= -2.0) {
-//            xPan += 2.0;
-//            Ship_pntr->xpos = 0.5f;
-//        }
-//        if (xPan >= 2.0) {
-//            xPan -= 2.0;
-//            Ship_pntr->xpos = -0.5f;
-//        }
-//    }
-    
+
     // Stop all photons from passing through the surfaces
-    void checkPhotons(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat slope, GLfloat yIntercept,Spaceship * anyShip_pntr, GLboolean panEnable)
+    // Inside vector holds photon params : 0-xpos, 1-ypos, 2-direction, 3-duration,
+    // 4-start xpos, 5-start ypos, 6-end xpos (virtual), 7-end ypos (virtual), 8-new photon indicator,
+    // 9-photonMaxDistance = 2 * sqrt(2) -> this will be replaced by distane to nearest collision surface
+    void checkPhotons(std::vector<Spaceship> * anyShip)
     {
-        GLfloat localxPan;
-        if (panEnable == true) localxPan = xPan;
-        else localxPan = 0.0f;
-        // Now check if photons have hit surface boundaries, if so stop drawing them
-        for ( int j=0; j < maxPhotons; j++) {
-            if (anyShip_pntr->photons[j].w > 0)  {
-                if ( x2 - x1 > 0.00001) {
-                    //                            std::cout << "I'm in 1\n";
-                    if (anyShip_pntr->photons[j].x + localxPan >= x1 and anyShip_pntr->photons[j].x + localxPan < x2 and anyShip_pntr->photons[j].y > std::min(y2, y1) - 0.02) {
-                        //                                std::cout << "I'm in 1\n";
-                        //                                std::cout << (anyShip_pntr->photons[j].y - slope * anyShip_pntr->photons[j].x) << std::endl;
-                        //                                std::cout << "yInt: " << yIntercept << std::endl;
-                        if ((anyShip_pntr->photons[j].y - slope * (anyShip_pntr->photons[j].x + localxPan)) < yIntercept) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
-                        }
-                    }
-                } // if x2 < x1, then we collide from below
-                else if ( x2 - x1 < -0.00001) {
-                    if (anyShip_pntr->photons[j].x + localxPan <= x1 and anyShip_pntr->photons[j].x + localxPan > x2 and anyShip_pntr->photons[j].y < std::max(y2, y1) + 0.02) {
-                        if ((anyShip_pntr->photons[j].y - slope * (anyShip_pntr->photons[j].x + localxPan)) > yIntercept) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
-                        }
-                    }
-                } // if x2 = x1, vertical surface.  If y2 > y1, we collide from the left
-                else if ( y2 - y1 > 0.00001) {
-                    if ( anyShip_pntr->photons[j].y >= y1 and anyShip_pntr->photons[j].y < y2 and anyShip_pntr->photons[j].x + localxPan < x1 + 0.02) {
-                        if (anyShip_pntr->photons[j].x + localxPan >= x1) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
-                        }
-                    }
-                } // if x2 = x1, vertical surface.  If y2 < y1, we collide from the right
-                else if ( y2 - y1 < -0.00001) {
-                    if ( anyShip_pntr->photons[j].y <= y1 and anyShip_pntr->photons[j].y > y2 and anyShip_pntr->photons[j].x + localxPan > x1 - 0.02) {
-                        if (anyShip_pntr->photons[j].x + localxPan <= x1) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
+        
+        for (Spaceship &gunna : * anyShip) {
+//            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
+            // Now check if photons have hit surface boundaries, if so stop drawing them
+            for ( int j=0; j < gunna.photons.size(); j++) {
+//                printf("made it this far 1\n");
+//                if (gunna.photons[j][3] > 0)  {
+                if (gunna.photons[j][8] > 0) {
+                    GLfloat x1 = gunna.photons[j][4];
+                    GLfloat y1 = gunna.photons[j][5];
+                    GLfloat x2 = gunna.photons[j][6];
+                    GLfloat y2 = gunna.photons[j][7];
+                    
+                    for (int i=0; i < NumOfVertices - 1; i++) {
+                        // first get the start and end points for each surface segment
+                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat y3 = SurfaceVerts[(i * 2) + 1];
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat y4 = SurfaceVerts[(i * 2) + 3];
+                        //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
+                        
+                        GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
+                        
+                        if ( denominator != 0 ) {
+                            GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
+                            GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
+                            //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
+                            if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
+                                //   p1 +ta*(p2 - p1)
+                                GLfloat xIntersect = x1 + ta * (x2 - x1);
+                                GLfloat yIntersect = y1 + ta * (y2 - y1);
+                                
+                                GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
+//                                printf("gunna.photons[%d][9] = %4.3f\n", j, gunna.photons[j][9]);
+//                                printf("photonSegmentLength = %4.3f\n", photonSegmentLength);
+                                if (gunna.photons[j][9] > photonSegmentLength) {
+                                    gunna.photons[j].pop_back();
+                                    gunna.photons[j].push_back(photonSegmentLength);
+                                }
+                            }
                         }
                     }
                 }
+//                }
+            }
+            for ( int j=0; j < gunna.photons.size(); j++) {
+                GLfloat xstart = gunna.photons[j][4]; // start xpos
+                GLfloat ystart = gunna.photons[j][5]; // start ypos
+                GLfloat xpos = gunna.photons[j][0]; // current xpos
+                GLfloat ypos = gunna.photons[j][1]; // current ypos
+                GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
+                if (currentLength >= gunna.photons[j][9] or gunna.photons[j][3] <= 0.0f) {
+//                    printf("Collision!\n");
+//                    gunna.photons[j][3] = -0.01f;
+                    gunna.photons.erase (gunna.photons.begin() + j);
+                }
+                
             }
         }
+    }
+    
+    void checkPhotons2()
+    {
         
+//        for (Spaceship &gunna : * anyShip) {
+//            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
+            // Now check if photons have hit surface boundaries, if so stop drawing them
+            for ( int j=0; j < Ship_pntr->photons.size(); j++) {
+//                printf("made it this far 1\n");
+                //                if (Ship_pntr->photons[j][3] > 0)  {
+                if (Ship_pntr->photons[j][8] > 0) {
+                    GLfloat x1 = Ship_pntr->photons[j][4];
+                    GLfloat y1 = Ship_pntr->photons[j][5];
+                    GLfloat x2 = Ship_pntr->photons[j][6];
+                    GLfloat y2 = Ship_pntr->photons[j][7];
+                    
+                    for (int i=0; i < NumOfVertices - 1; i++) {
+                        // first get the start and end points for each surface segment
+                        GLfloat x3 = SurfaceVerts[(i * 2)] + xPan;
+                        GLfloat y3 = SurfaceVerts[(i * 2) + 1];
+                        GLfloat x4 = SurfaceVerts[(i * 2) + 2] + xPan;
+                        GLfloat y4 = SurfaceVerts[(i * 2) + 3];
+                        //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
+                        
+                        GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
+                        
+                        if ( denominator != 0 ) {
+                            GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
+                            GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
+                            //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
+                            if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
+                                //   p1 +ta*(p2 - p1)
+                                GLfloat xIntersect = x1 + ta * (x2 - x1);
+                                GLfloat yIntersect = y1 + ta * (y2 - y1);
+                                
+                                GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
+//                                printf("Ship_pntr->photons[%d][9] = %4.3f\n", j, Ship_pntr->photons[j][9]);
+//                                printf("photonSegmentLength = %4.3f\n", photonSegmentLength);
+                                if (Ship_pntr->photons[j][9] > photonSegmentLength) {
+                                    Ship_pntr->photons[j].pop_back();
+                                    Ship_pntr->photons[j].push_back(photonSegmentLength);
+                                }
+                            }
+                        }
+                    }
+//                }
+                //                }
+            }
+            for ( int j=0; j < Ship_pntr->photons.size(); j++) {
+                GLfloat xstart = Ship_pntr->photons[j][4]; // start xpos
+                GLfloat ystart = Ship_pntr->photons[j][5]; // start ypos
+                GLfloat xpos = Ship_pntr->photons[j][0]; // current xpos
+                GLfloat ypos = Ship_pntr->photons[j][1]; // current ypos
+                GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
+                if (currentLength >= Ship_pntr->photons[j][9] or Ship_pntr->photons[j][3] <= 0.0f) {
+//                    printf("Collision!\n");
+                    //                    Ship_pntr->photons[j][3] = -0.01f;
+                    Ship_pntr->photons.erase (Ship_pntr->photons.begin() + j);
+                }
+                
+            }
+        }
     }
     
     void drawExit(Shader * shader, Vbos * vao, glm::vec2 position, GLfloat gateThickness = 0.002f)

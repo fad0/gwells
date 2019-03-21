@@ -54,7 +54,7 @@ void Game::Init()
     ShipPolarCoords = vbos.getShipPolarCoords();
     
     // Load all Levels
-    GameLevel level1("/Users/dirk/games/gwells/levels/testlevel.txt"); level1.Load();
+    GameLevel level1("/Users/dirk/games/gwells/levels/fp3.txt"); level1.Load();
 //    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
 //    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
 //    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
@@ -110,6 +110,9 @@ void Game::Init()
     // Initialize ship
 //    ship.init(0.0, 0.00, 0.0);
     ship.init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
+    Ship_v.clear();
+    Ship_v.push_back(ship);
+    Ship_vp = &Ship_v;
     
     // Initialize first Level
     this->InitGuns();
@@ -145,9 +148,13 @@ void Game::Update(GLfloat deltaTime)
         gunna.updateGunner(Vbos_p, Shader_p, PShader_p, Ship_p, deltaTime);
     int surfaIndex = 0;
     for (Surface2 &surfa : Surfaces) {
-        printf("surfaIndex = %d\n", surfaIndex);
+
         surfa.draw();
         surfa.checkBoundary();
+        surfa.checkPhotons2();
+        surfa.checkPhotons(Guns_p);
+        printf("Checking Ship photons\n");
+        
         surfaIndex++;
     }
     
@@ -182,6 +189,8 @@ void Game::UpdateGate(GLfloat deltaTime)
 
         Gate.draw(gateColor, gateThickness);
         Gate.checkBoundary();
+        Gate.checkPhotons2();
+        Gate.checkPhotons(Guns_p);
     }
 }
 
@@ -246,14 +255,15 @@ void Game::InitGuns() {
         Guns.push_back(obj);
     }
     Guns_p = &Guns;
-    Gun = 0;
+//    Gun = 0;
 }
+
 
 void Game::InitSurfaces() {
     Surfaces.clear();
     for(int i=0; i < levelVertNames[currentLevel].size(); i++) {
         Surface2 obj;
-        obj.init((GLuint) Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size()/2, Levels[currentLevel].Level[levelVertNames[currentLevel][i]], Ship_p, Guns_p, LShader_p, Levels[currentLevel].VAOS[i], ShipPolarCoords);
+        obj.init((GLuint) Levels[currentLevel].Level[levelVertNames[currentLevel][i]].size()/2, Levels[currentLevel].Level[levelVertNames[currentLevel][i]], Ship_p, LShader_p, Levels[currentLevel].VAOS[i], ShipPolarCoords);
         Surfaces.push_back(obj);
         //------------------------
 //        std::cout << "current level = " << currentLevel << std::endl;
@@ -266,7 +276,7 @@ void Game::InitSurfaces() {
         
         
     }
-    Gate.init((GLuint) Levels[currentLevel].Level["VERT_gate"].size()/2, Levels[currentLevel].Level["VERT_gate"], Ship_p, Guns_p, LShader_p, Levels[currentLevel].gateVAO, ShipPolarCoords);
+    Gate.init((GLuint) Levels[currentLevel].Level["VERT_gate"].size()/2, Levels[currentLevel].Level["VERT_gate"], Ship_p, LShader_p, Levels[currentLevel].gateVAO, ShipPolarCoords);
     
 }
 

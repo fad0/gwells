@@ -169,7 +169,7 @@ int main() {
         // draw the spaceship, gunners, surfaces, and gate
         //--------------------------
         gWell.Update(deltaTime);
-//        gWell.UpdateGate(deltaTime);
+        gWell.UpdateGate(deltaTime);
         
         // Check status of Spaceship
         //---------------------------

@@ -181,36 +181,36 @@ public:
         else localxPan = 0.0f;
         // Now check if photons have hit surface boundaries, if so stop drawing them
         for ( int j=0; j < maxPhotons; j++) {
-            if (anyShip_pntr->photons[j].w > 0)  {
+            if (anyShip_pntr->photons[j][3] > 0)  {
                 if ( x2 - x1 > 0.00001) {
                     //                            std::cout << "I'm in 1\n";
-                    if (anyShip_pntr->photons[j].x + localxPan >= x1 and anyShip_pntr->photons[j].x + localxPan < x2 and anyShip_pntr->photons[j].y > std::min(y2, y1) - 0.02) {
+                    if (anyShip_pntr->photons[j][0] + localxPan >= x1 and anyShip_pntr->photons[j][0] + localxPan < x2 and anyShip_pntr->photons[j][1] > std::min(y2, y1) - 0.02) {
                         //                                std::cout << "I'm in 1\n";
-                        //                                std::cout << (anyShip_pntr->photons[j].y - slope * anyShip_pntr->photons[j].x) << std::endl;
+                        //                                std::cout << (anyShip_pntr->photons[j][1] - slope * anyShip_pntr->photons[j][0]) << std::endl;
                         //                                std::cout << "yInt: " << yIntercept << std::endl;
-                        if ((anyShip_pntr->photons[j].y - slope * (anyShip_pntr->photons[j].x + localxPan)) < yIntercept) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
+                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0] + localxPan)) < yIntercept) {
+                            anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 < x1, then we collide from below
                 else if ( x2 - x1 < -0.00001) {
-                    if (anyShip_pntr->photons[j].x + localxPan <= x1 and anyShip_pntr->photons[j].x + localxPan > x2 and anyShip_pntr->photons[j].y < std::max(y2, y1) + 0.02) {
-                        if ((anyShip_pntr->photons[j].y - slope * (anyShip_pntr->photons[j].x + localxPan)) > yIntercept) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
+                    if (anyShip_pntr->photons[j][0] + localxPan <= x1 and anyShip_pntr->photons[j][0] + localxPan > x2 and anyShip_pntr->photons[j][1] < std::max(y2, y1) + 0.02) {
+                        if ((anyShip_pntr->photons[j][1] - slope * (anyShip_pntr->photons[j][0] + localxPan)) > yIntercept) {
+                            anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 = x1, vertical surface.  If y2 > y1, we collide from the left
                 else if ( y2 - y1 > 0.00001) {
-                    if ( anyShip_pntr->photons[j].y >= y1 and anyShip_pntr->photons[j].y < y2 and anyShip_pntr->photons[j].x + localxPan < x1 + 0.02) {
-                        if (anyShip_pntr->photons[j].x + localxPan >= x1) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
+                    if ( anyShip_pntr->photons[j][1] >= y1 and anyShip_pntr->photons[j][1] < y2 and anyShip_pntr->photons[j][0] + localxPan < x1 + 0.02) {
+                        if (anyShip_pntr->photons[j][0] + localxPan >= x1) {
+                            anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 } // if x2 = x1, vertical surface.  If y2 < y1, we collide from the right
                 else if ( y2 - y1 < -0.00001) {
-                    if ( anyShip_pntr->photons[j].y <= y1 and anyShip_pntr->photons[j].y > y2 and anyShip_pntr->photons[j].x + localxPan > x1 - 0.02) {
-                        if (anyShip_pntr->photons[j].x + localxPan <= x1) {
-                            anyShip_pntr->photons[j].w = -0.01f;  // photon destroyed in the collision
+                    if ( anyShip_pntr->photons[j][1] <= y1 and anyShip_pntr->photons[j][1] > y2 and anyShip_pntr->photons[j][0] + localxPan > x1 - 0.02) {
+                        if (anyShip_pntr->photons[j][0] + localxPan <= x1) {
+                            anyShip_pntr->photons[j][3] = -0.01f;  // photon destroyed in the collision
                         }
                     }
                 }

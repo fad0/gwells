@@ -66,6 +66,8 @@ public:
     Vbos * vbos_skyIsland_p;
     Vbos * vbos_gate_p;
     Spaceship * Ship_p;
+    std::vector<Spaceship> Ship_v;
+    std::vector<Spaceship> * Ship_vp;
     std::vector<Spaceship> Guns;
     std::vector<Spaceship> * Guns_p;
     GLuint Gun;

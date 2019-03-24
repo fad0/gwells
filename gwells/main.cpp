@@ -121,12 +121,14 @@ int main() {
 //    ISound* snd;
 //    
 //
-    //******************************//
-    gWell.Init();
+    
     
     // DeltaTime variables
     GLfloat deltaTime = 0.0f;
     GLfloat lastFrame = 0.0f;
+    
+    //******************************//
+    gWell.Init();
     
     // render loop
     // -----------

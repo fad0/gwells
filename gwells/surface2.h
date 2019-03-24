@@ -26,6 +26,8 @@ class Surface2
     GLfloat yIntercept;
     glm::vec3 surfaceScaleFactor = glm::vec3(1.0f, 1.0f, 1.0f);
     
+    GLfloat photonSegmentLengthReducer = 1.0f;  // Distance a photon can travel in on draw cycle.  This is to keep it from crossing a boundary.
+    
  
 public:
 //    glm::vec2 Position;
@@ -150,65 +152,71 @@ public:
     // Inside vector holds photon params : 0-xpos, 1-ypos, 2-direction, 3-duration,
     // 4-start xpos, 5-start ypos, 6-end xpos (virtual), 7-end ypos (virtual), 8-new photon indicator,
     // 9-photonMaxDistance = 2 * sqrt(2) -> this will be replaced by distane to nearest collision surface
-    void checkPhotons(std::vector<Spaceship> * anyShip)
+    void checkPhotons(std::vector<Spaceship> * anyShip, GLfloat deltaTime)
     {
         
         for (Spaceship &gunna : * anyShip) {
-//            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
-            // Now check if photons have hit surface boundaries, if so stop drawing them
-            for ( int j=0; j < gunna.photons.size(); j++) {
-//                printf("made it this far 1\n");
-//                if (gunna.photons[j][3] > 0)  {
-                if (gunna.photons[j][8] > 0) {
-                    GLfloat x1 = gunna.photons[j][4];
-                    GLfloat y1 = gunna.photons[j][5];
-                    GLfloat x2 = gunna.photons[j][6];
-                    GLfloat y2 = gunna.photons[j][7];
-                    
-                    for (int i=0; i < NumOfVertices - 1; i++) {
-                        // first get the start and end points for each surface segment
-                        GLfloat x3 = SurfaceVerts[(i * 2)];
-                        GLfloat y3 = SurfaceVerts[(i * 2) + 1];
-                        GLfloat x4 = SurfaceVerts[(i * 2) + 2];
-                        GLfloat y4 = SurfaceVerts[(i * 2) + 3];
-                        //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
+            if (gunna.Draw == true) {
+                //            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
+                // Now check if photons have hit surface boundaries, if so stop drawing them
+                for ( int j=0; j < gunna.photons.size(); j++) {
+                    //                printf("made it this far 1\n");
+                    //                if (gunna.photons[j][3] > 0)  {
+                    if (gunna.photons[j][8] > 0) {
+                        GLfloat x1 = gunna.photons[j][4];
+                        GLfloat y1 = gunna.photons[j][5];
+                        GLfloat x2 = gunna.photons[j][6];
+                        GLfloat y2 = gunna.photons[j][7];
                         
-                        GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
-                        
-                        if ( denominator != 0 ) {
-                            GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
-                            GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
-                            //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
-                            if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
-                                //   p1 +ta*(p2 - p1)
-                                GLfloat xIntersect = x1 + ta * (x2 - x1);
-                                GLfloat yIntersect = y1 + ta * (y2 - y1);
-                                
-                                GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
-//                                printf("gunna.photons[%d][9] = %4.3f\n", j, gunna.photons[j][9]);
-//                                printf("photonSegmentLength = %4.3f\n", photonSegmentLength);
-                                if (gunna.photons[j][9] > photonSegmentLength) {
-                                    gunna.photons[j].pop_back();
-                                    gunna.photons[j].push_back(photonSegmentLength);
+                        for (int i=0; i < NumOfVertices - 1; i++) {
+                            // first get the start and end points for each surface segment
+                            GLfloat x3 = SurfaceVerts[(i * 2)];
+                            GLfloat y3 = SurfaceVerts[(i * 2) + 1];
+                            GLfloat x4 = SurfaceVerts[(i * 2) + 2];
+                            GLfloat y4 = SurfaceVerts[(i * 2) + 3];
+                            //                    printf("x3 = %3.2f  y3 = %3.2f  x4 = %3.2f  y4 = %3.2f\n", x3, y3, x4, y4);
+                            
+                            GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
+                            
+                            if ( denominator != 0 ) {
+                                GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
+                                GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
+                                //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
+                                if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
+                                    //   p1 +ta*(p2 - p1)
+                                    GLfloat xIntersect = x1 + ta * (x2 - x1);
+                                    GLfloat yIntersect = y1 + ta * (y2 - y1);
+                                    
+                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
+//                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2)) - photonSegmentLengthReducer * deltaTime;
+                                    
+//                                    printf("Surface: gunna.photons[%d][9] = %4.3f\n", j, gunna.photons[j][9]);
+//                                    printf("Surface: photonSegmentLength = %4.3f\n", photonSegmentLength);
+                                    if (gunna.photons[j][9] > photonSegmentLength) {
+                                    //  myvector.erase (myvector.begin()+5);
+                                        gunna.photons[j].erase(gunna.photons[j].end() - 1);
+                                        gunna.photons[j].insert(gunna.photons[j].end() - 1, photonSegmentLength);
+                                    }
                                 }
                             }
                         }
                     }
+                    //                }
                 }
-//                }
-            }
-            for ( int j=0; j < gunna.photons.size(); j++) {
-                GLfloat xstart = gunna.photons[j][4]; // start xpos
-                GLfloat ystart = gunna.photons[j][5]; // start ypos
-                GLfloat xpos = gunna.photons[j][0]; // current xpos
-                GLfloat ypos = gunna.photons[j][1]; // current ypos
-                GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
-                if (currentLength >= gunna.photons[j][9] or gunna.photons[j][3] <= 0.0f) {
-//                    printf("Collision!\n");
-//                    gunna.photons[j][3] = -0.01f;
-                    gunna.photons.erase (gunna.photons.begin() + j);
+//                printf("Surface gunna.photons.size() = %lu\n", gunna.photons.size());
+                for ( int j=0; j < gunna.photons.size(); j++) {
+                    GLfloat xstart = gunna.photons[j][4]; // start xpos
+                    GLfloat ystart = gunna.photons[j][5]; // start ypos
+                    GLfloat xpos = gunna.photons[j][0]; // current xpos
+                    GLfloat ypos = gunna.photons[j][1]; // current ypos
+                    GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
+                    if (currentLength >= gunna.photons[j][9] or gunna.photons[j][3] <= 0.0f) {
+//                        printf("Collision!\n");
+                        gunna.photons[j][3] = -0.01f;
+                        gunna.photons.erase (gunna.photons.begin() + j);
+                    }
+                    
                 }
-                
             }
         }
     }

@@ -52,19 +52,22 @@ void Game::Init()
     Vbos_p = &vbos;
     vbos.init();
     ShipPolarCoords = vbos.getShipPolarCoords();
+    GunnerPolarCoords = vbos.getGunnerPolarCoords();
     
     // Load all Levels
-    GameLevel level1("/Users/dirk/games/gwells/levels/level3.txt"); level1.Load();
-//    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
-//    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
-//    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
-//    GameLevel level5("/Users/dirk/games/gwells/levels/level5.txt"); level5.Load();
-    
+    GameLevel level1("/Users/dirk/games/gwells/levels/level1.txt"); level1.Load();
+    GameLevel level2("/Users/dirk/games/gwells/levels/level2.txt"); level2.Load();
+    GameLevel level3("/Users/dirk/games/gwells/levels/level3.txt"); level3.Load();
+    GameLevel level4("/Users/dirk/games/gwells/levels/level4.txt"); level4.Load();
+    GameLevel level5("/Users/dirk/games/gwells/levels/level5.txt"); level5.Load();
+    GameLevel level6("/Users/dirk/games/gwells/levels/level6.txt"); level6.Load();
+//
     Levels.push_back(level1);
-//    Levels.push_back(level2);
-//    Levels.push_back(level3);
-//    Levels.push_back(level4);
-//    Levels.push_back(level5);
+    Levels.push_back(level2);
+    Levels.push_back(level3);
+    Levels.push_back(level4);
+    Levels.push_back(level5);
+    Levels.push_back(level6);
 //    std::cout << "Level 1 skyvertices size: " << Levels[0].Level[Levels[0].vboName[0]].size() << std::endl;
 //    std::cout << "Level 2 skyvertices size: " << Levels[1].Level[Levels[1].vboName[0]].size() << std::endl;
 //    std::cout << "Level 3 skyvertices size: " << Levels[2].Level[Levels[2].vboName[0]].size() << std::endl;
@@ -129,27 +132,31 @@ void Game::Init()
 
 void Game::Update(GLfloat deltaTime)
 {
+    
+        
+    
     if (exitPoints.size() > 0)
         if (Levels[currentLevel].Level["VERT_exit"].size() > 0)
-            GroundSurface_p->drawExit(Shader_p, Vbos_p, exitPoint);
-    Ship[0].update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
+            Gate.drawExit(Shader_p, Vbos_p, exitPoint);
+    
     
     for (glm::vec2 &gwells : Ship[0].centerOfGravity)
-        GroundSurface_p->drawBluehole(Shader_p, Vbos_p, gwells);
+        Gate.drawBluehole(Shader_p, Vbos_p, gwells);
     
     for (Spaceship &gunna : Guns)
         gunna.updateGunner(Vbos_p, Shader_p, PShader_p, Ship_p, deltaTime);
+    
     int surfaIndex = 0;
     for (Surface2 &surfa : Surfaces) {
-
+        
         surfa.draw();
         surfa.checkBoundary();
-        surfa.checkPhotons(Ship_p);
-        surfa.checkPhotons(Guns_p);
-        printf("Checking Ship photons\n");
-        
+        surfa.checkPhotons(Ship_p, deltaTime);
+        surfa.checkPhotons(Guns_p, deltaTime);
         surfaIndex++;
+    
     }
+    Ship[0].update(Vbos_p, Shader_p, PShader_p, Guns_p, deltaTime);
     
 //    for (GLuint &indexa : levelSurfacesIndexes[currentLevel]) {
 //        Surfaces[indexa].draw();
@@ -182,8 +189,8 @@ void Game::UpdateGate(GLfloat deltaTime)
 
         Gate.draw(gateColor, gateThickness);
         Gate.checkBoundary();
-        Gate.checkPhotons(Ship_p);
-        Gate.checkPhotons(Guns_p);
+        Gate.checkPhotons(Ship_p, deltaTime);
+        Gate.checkPhotons(Guns_p, deltaTime);
     }
 }
 
@@ -242,7 +249,7 @@ void Game::UpdateLevel()
 void Game::InitShip() {
     Ship.clear();
     Spaceship obj;
-    obj.init(startPoints[currentLevel][0], startPoints[currentLevel][1], 0.0);
+    obj.init(startPoints[currentLevel][0], startPoints[currentLevel][1], 180.0);
     Ship.push_back(obj);
     Ship_p = &Ship;
 }
@@ -251,7 +258,8 @@ void Game::InitGuns() {
     Guns.clear();
     for(int i=0; i < Levels[currentLevel].Level["VERT_guns"].size()/3; i++) {
         Spaceship obj;
-        obj.init(Levels[currentLevel].Level["VERT_guns"][(i * 3)], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 1], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 2]);
+//        printf("Gunner %d:\n", i);
+        obj.initGunner(Levels[currentLevel].Level["VERT_guns"][(i * 3)], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 1], Levels[currentLevel].Level["VERT_guns"][(i * 3) + 2], GunnerPolarCoords);
         Guns.push_back(obj);
     }
     Guns_p = &Guns;

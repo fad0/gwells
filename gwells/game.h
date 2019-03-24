@@ -51,8 +51,7 @@ class Game
 
     
 public:
-    // Game state
-    //    GameState              State;
+
     GLuint                 Width, Height;
     GameState              State;
     GLboolean              Gameover = false;
@@ -62,19 +61,19 @@ public:
     Shader * PShader_p;
     Shader * LShader_p;
     Vbos * Vbos_p;
-    Vbos * vbos_line_p;
-    Vbos * vbos_skyIsland_p;
-    Vbos * vbos_gate_p;
+//    Vbos * vbos_line_p;
+//    Vbos * vbos_skyIsland_p;
+//    Vbos * vbos_gate_p;
 //    Spaceship * Ship_p;
     std::vector<Spaceship> Ship;
     std::vector<Spaceship> * Ship_p;
     std::vector<Spaceship> Guns;
     std::vector<Spaceship> * Guns_p;
     
-    Surface2 * GroundSurface_p;
-    Surface2 * SkyIslandSurface_p;
-    Surface2 * SkyIslandSurface_p1;
-    Surface2 * GateSurface_p;
+//    Surface2 * GroundSurface_p;
+//    Surface2 * SkyIslandSurface_p;
+//    Surface2 * SkyIslandSurface_p1;
+//    Surface2 * GateSurface_p;
     
     std::vector<GameLevel> Levels;
     std::vector<std::vector<std::string>>  levelVertNames;
@@ -97,12 +96,15 @@ public:
     std::vector<std::vector<GLfloat>> gravityStrengths;
     
     std::vector<GLfloat> ShipPolarCoords;
+    std::vector<GLfloat> GunnerPolarCoords;
     
-    void Init();
+    void Init() ;
     void InitShip();
     void InitGuns();
     void InitSurfaces();
-    void Update(GLfloat dt);
+    void Update(GLfloat deltaTime);
+//    void ProcessInput(GLFWwindow *window);
+//    void UpdateGate();
     void ProcessInput(GLFWwindow *window, GLfloat deltaTime);
     void UpdateGate(GLfloat deltaTime);
     void CheckStatus();

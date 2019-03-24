@@ -33,6 +33,27 @@ public:
     };
     std::vector<GLfloat> ShipPolarCoords;
     
+    GLfloat gunner[12] = {
+        0.3f, 0.3f,
+        -0.5f, 0.0f,
+        0.5f, 0.0f,
+        
+        0.3f, 0.3f,
+        -0.3f, 0.3f,
+        -0.5f, 0.0f,
+    };
+    std::vector<GLfloat> GunnerPolarCoords;
+    
+    GLfloat cannon[12] = {
+        -0.1f, 0.3,
+        0.1f, 0.45f,
+        -0.1f, 0.45f,
+        
+        0.1f, 0.45f,
+        -0.1f, 0.3f,
+        0.1f, 0.3f
+    };
+    
     
     
     
@@ -80,13 +101,25 @@ public:
     }
     
     std::vector<GLfloat> getShipPolarCoords() {
+        ShipPolarCoords.push_back(sqrt(pow(spaceship[0],2) + pow(spaceship[1],2)));   // ship bottom R
+        ShipPolarCoords.push_back(atan2(spaceship[1], spaceship[0]));               // ship bottom angle theta
         ShipPolarCoords.push_back(sqrt(pow(spaceship[2],2) + pow(spaceship[3],2))); // ship front R
         ShipPolarCoords.push_back(atan2(spaceship[3], spaceship[2]));             // ship front angle 0.
         ShipPolarCoords.push_back(sqrt(pow(spaceship[4],2) + pow(spaceship[5],2)));   //ship top R
         ShipPolarCoords.push_back(atan2(spaceship[5], spaceship[4]));               //ship top angle theta
-        ShipPolarCoords.push_back(sqrt(pow(spaceship[0],2) + pow(spaceship[1],2)));   // ship bottom R
-        ShipPolarCoords.push_back(atan2(spaceship[1], spaceship[0]));               // ship bottom angle theta
+
         return ShipPolarCoords;
+    }
+    std::vector<GLfloat> getGunnerPolarCoords() {
+        GunnerPolarCoords.push_back(sqrt(pow(gunner[4],2) + pow(gunner[5],2)));
+        GunnerPolarCoords.push_back(atan2(gunner[5], gunner[4]));
+        GunnerPolarCoords.push_back(sqrt(pow(gunner[6],2) + pow(gunner[7],2)));
+        GunnerPolarCoords.push_back(atan2(gunner[7], gunner[6]));
+        GunnerPolarCoords.push_back(sqrt(pow(gunner[8],2) + pow(gunner[9],2)));
+        GunnerPolarCoords.push_back(atan2(gunner[9], gunner[8]));
+        GunnerPolarCoords.push_back(sqrt(pow(gunner[10],2) + pow(gunner[11],2)));
+        GunnerPolarCoords.push_back(atan2(gunner[11], gunner[10]));
+        return GunnerPolarCoords;
     }
     
     void init()
@@ -112,25 +145,25 @@ public:
         };
         
         
-        GLfloat gunner[] = {
-            -0.5f, 0.0f,
-            0.3f, 0.3f,
-            -0.3f, 0.3f,
-            
-             0.3f, 0.3f,
-            -0.5f, 0.0f,
-             0.5f, 0.0f,
-        };
-        
-        GLfloat cannon[] = {
-            -0.1f, 0.3,
-            0.1f, 0.45f,
-            -0.1f, 0.45f,
-            
-             0.1f, 0.45f,
-            -0.1f, 0.3f,
-             0.1f, 0.3f
-        };
+//        GLfloat gunner[] = {
+//            -0.5f, 0.0f,
+//            0.3f, 0.3f,
+//            -0.3f, 0.3f,
+//
+//             0.3f, 0.3f,
+//            -0.5f, 0.0f,
+//             0.5f, 0.0f,
+//        };
+//
+//        GLfloat cannon[] = {
+//            -0.1f, 0.3,
+//            0.1f, 0.45f,
+//            -0.1f, 0.45f,
+//
+//             0.1f, 0.45f,
+//            -0.1f, 0.3f,
+//             0.1f, 0.3f
+//        };
         
         GLfloat exit[] = {
             0.0f, 0.5,

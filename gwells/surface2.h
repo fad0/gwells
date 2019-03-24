@@ -159,7 +159,7 @@ public:
             if (gunna.Draw == true) {
                 //            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
                 // Now check if photons have hit surface boundaries, if so stop drawing them
-                for ( int j=0; j < gunna.photons.size(); j++) {
+                for ( int j=0; j < gunna.maxPhotons; j++) {
                     //                printf("made it this far 1\n");
                     //                if (gunna.photons[j][3] > 0)  {
                     if (gunna.photons[j][8] > 0) {
@@ -194,8 +194,7 @@ public:
 //                                    printf("Surface: photonSegmentLength = %4.3f\n", photonSegmentLength);
                                     if (gunna.photons[j][9] > photonSegmentLength) {
                                     //  myvector.erase (myvector.begin()+5);
-                                        gunna.photons[j].erase(gunna.photons[j].end() - 1);
-                                        gunna.photons[j].insert(gunna.photons[j].end() - 1, photonSegmentLength);
+                                        gunna.photons[j][9] = photonSegmentLength;
                                     }
                                 }
                             }
@@ -204,7 +203,7 @@ public:
                     //                }
                 }
 //                printf("Surface gunna.photons.size() = %lu\n", gunna.photons.size());
-                for ( int j=0; j < gunna.photons.size(); j++) {
+                for ( int j=0; j < gunna.maxPhotons; j++) {
                     GLfloat xstart = gunna.photons[j][4]; // start xpos
                     GLfloat ystart = gunna.photons[j][5]; // start ypos
                     GLfloat xpos = gunna.photons[j][0]; // current xpos
@@ -212,8 +211,7 @@ public:
                     GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
                     if (currentLength >= gunna.photons[j][9] or gunna.photons[j][3] <= 0.0f) {
 //                        printf("Collision!\n");
-                        gunna.photons[j][3] = -0.01f;
-                        gunna.photons.erase (gunna.photons.begin() + j);
+                        gunna.photons[j][3] = -1.0f;
                     }
                     
                 }

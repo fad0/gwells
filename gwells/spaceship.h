@@ -20,7 +20,7 @@
 
 #include <cmath>
 
-static const GLuint maxPhotons = 5;
+
 static const GLfloat photonSpeed = 1.0f; // how fast photons move
 static const GLfloat photonDuration = 2.0f;  // how long they last
 static const GLfloat photonMaxDistance = 2.828f; // screen diagonal is 2 * sqrt(2)
@@ -104,7 +104,10 @@ public:
     GLfloat explodeTime = 0.0f;
     GLuint shipsLeft = initialShipCount;
     GLboolean playBell = false;
-    std::vector<std::vector<GLfloat>> photons;
+    
+    static const GLuint maxPhotons = 5;
+    static const GLuint photonParams = 10;
+    GLfloat photons[maxPhotons][photonParams];
     GLfloat ShortestPhotonSegment[maxPhotons] = {photonMaxDistance, photonMaxDistance, photonMaxDistance, photonMaxDistance, photonMaxDistance};
     // Inside vector holds photon params : 0-xpos, 1-ypos, 2-direction, 3-duration,
     // 4-start xpos, 5-start ypos, 6-end xpos (virtual), 7-end ypos (virtual), 8-new photon indicator,
@@ -136,6 +139,21 @@ public:
 //        ypos = Ypos;
 //        Shape = gunnerScaleVec;
 //    }
+    
+    void initPhotons() {
+        for (int i=0; i < maxPhotons; i++) {
+            photons[i][0] = 0;
+            photons[i][1] = 0;
+            photons[i][2] = 0;
+            photons[i][3] = -1.0f;
+            photons[i][4] = 0;  //  start xpos, not updated as photon moves
+            photons[i][5] = 0;  //  start ypos, not updated as photon moves
+            photons[i][6] = 0; // endpoint of photon virtual line segment
+            photons[i][7] = 0; // endpoint of photon virtual line segment
+            photons[i][8] = 1.0; // 1.0 indicates a new photon for the collision calculations
+            photons[i][9] = photonMaxDistance;  // for surfaces
+        }
+    }
 
     void init(GLfloat Xpos, GLfloat Ypos, GLint gunRotation )
     {
@@ -152,6 +170,7 @@ public:
         Draw = true;
         explodeShip = false;
         explodeTime = 0;
+        initPhotons();
 
     }
     
@@ -170,6 +189,7 @@ public:
         Draw = true;
         explodeShip = false;
         explodeTime = 0;
+        initPhotons();
         
 
 //        GunnerVertexCoords.clear();
@@ -279,7 +299,7 @@ public:
             updatePhotons(firePhoton, true, vbos_p, pShader, 0.25f, Direction, deltaTime, false);
 
             for (Spaceship &gunna : *Guns_p) {
-                for ( int j=0; j < gunna.photons.size(); j++) {
+                for ( int j=0; j < maxPhotons; j++) {
                     if (gunna.photons[j][3] > 0)  {
                         if (gunna.photons[j][0] > xpos - Shape.x/2 and gunna.photons[j][0] < xpos + Shape.x/2 and gunna.photons[j][1] > ypos - Shape.y/2 and gunna.photons[j][1] < ypos + Shape.y/2) {
                             Draw = false;
@@ -369,63 +389,59 @@ public:
             //            printf("checkPhotons gunna.photons.size() = %lu\n", gunna.photons.size());
             // Now check if photons have hit surface boundaries, if so stop drawing them
             for (Spaceship &shipa : * ship_p) {
-                for ( int j=0; j < shipa.photons.size(); j++) {
-                    GLfloat x1 = shipa.photons[j][4];
-                    GLfloat y1 = shipa.photons[j][5];
-                    GLfloat x2 = shipa.photons[j][6];
-                    GLfloat y2 = shipa.photons[j][7];
-                    
-                    for (int i=0; i < GunnerVertexCoords.size() - 2; i+=2) {
-                        // first get the start and end points for each surface segment
-                        GLfloat x3 = GunnerVertexCoords[i    ];
-                        GLfloat y3 = GunnerVertexCoords[i + 1];
-                        GLfloat x4 = GunnerVertexCoords[i + 2];
-                        GLfloat y4 = GunnerVertexCoords[i + 3];
-                        //                            printf("x3 = %3.4f  y3 = %3.4f  x4 = %3.4f  y4 = %3.4f\n", x3, y3, x4, y4);
-                        
-                        GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
-                        
-                        if ( denominator != 0 ) {
-                            GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
-                            GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
-                            //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
-                            if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
-                                //   p1 +ta*(p2 - p1)
-                                GLfloat xIntersect = x1 + ta * (x2 - x1);
-                                GLfloat yIntersect = y1 + ta * (y2 - y1);
+                    for ( int j=0; j < maxPhotons; j++) {
+                        if (shipa.photons[j][3] > 0.0f) {
+                            GLfloat x1 = shipa.photons[j][4];
+                            GLfloat y1 = shipa.photons[j][5];
+                            GLfloat x2 = shipa.photons[j][6];
+                            GLfloat y2 = shipa.photons[j][7];
+                            
+                            for (int i=0; i < GunnerVertexCoords.size() - 2; i+=2) {
+                                // first get the start and end points for each surface segment
+                                GLfloat x3 = GunnerVertexCoords[i    ];
+                                GLfloat y3 = GunnerVertexCoords[i + 1];
+                                GLfloat x4 = GunnerVertexCoords[i + 2];
+                                GLfloat y4 = GunnerVertexCoords[i + 3];
+                                //                            printf("x3 = %3.4f  y3 = %3.4f  x4 = %3.4f  y4 = %3.4f\n", x3, y3, x4, y4);
                                 
-                                GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
-                                if (shipa.photons[j][10] > photonSegmentLength) {
-                                    shipa.photons[j].pop_back();
-                                    shipa.photons[j].push_back(photonSegmentLength);
-                                }
-                                if (ShortestPhotonSegment[j] > photonSegmentLength)
-                                    ShortestPhotonSegment[j] = photonSegmentLength;
+                                GLfloat denominator = (x4 - x3)*(y1 - y2) - (x1 - x2)*(y4 - y3);
                                 
+                                if ( denominator != 0 ) {
+                                    GLfloat ta=((y3 - y4)*(x1 - x3) + (x4 - x3)*(y1 - y3))/denominator;
+                                    GLfloat tb=((y1 - y2)*(x1 - x3) + (x2 - x1)*(y1 - y3))/denominator;
+                                    //                        printf("ta = %3.2f  tb = %3.2f\n", ta, tb);
+                                    if (ta >= 0 and ta <= 1 and tb >= 0 and tb <= 1) {
+                                        //   p1 +ta*(p2 - p1)
+                                        GLfloat xIntersect = x1 + ta * (x2 - x1);
+                                        GLfloat yIntersect = y1 + ta * (y2 - y1);
+                                        
+                                        GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
+                                        if (ShortestPhotonSegment[j] > photonSegmentLength)
+                                            ShortestPhotonSegment[j] = photonSegmentLength;
+                                        
+                                    }
+                                } else ShortestPhotonSegment[j] = photonMaxDistance;
                             }
-                        } else ShortestPhotonSegment[j] = photonMaxDistance;
+                        }
                     }
-                    
-                }
 //                printf("Spaceship shipa.photons.size() = %lu\n", shipa.photons.size());
 //                printf("Spaceship Draw = %d\n", Draw);
-                for ( int j=0; j < shipa.photons.size(); j++) {
-                    GLfloat xstart = shipa.photons[j][4]; // start xpos
-                    GLfloat ystart = shipa.photons[j][5]; // start ypos
-                    GLfloat xpos = shipa.photons[j][0]; // current xpos
-                    GLfloat ypos = shipa.photons[j][1]; // current ypos
-                    GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
-                    printf("currentLength = %4.5f\n", currentLength);
-                    printf("shipa.photons[%d][10] = %4.3f\n", j, shipa.photons[j][10]);
-                    printf("ShortestPhotonSegment[%d] = %4.3f\n", j, ShortestPhotonSegment[j]);
-
-                    if (shipa.photons[j][10] > this->ShortestPhotonSegment[j] * 0.995 and shipa.photons[j][10] < this->ShortestPhotonSegment[j] * 1.005) {
-                        if (currentLength >= shipa.photons[j][10] or shipa.photons[j][3] <= 0.0f) {
+                for ( int j=0; j < maxPhotons; j++) {
+                    if (shipa.photons[j][3] > 0.0f) {
+                        GLfloat xstart = shipa.photons[j][4]; // start xpos
+                        GLfloat ystart = shipa.photons[j][5]; // start ypos
+                        GLfloat xpos = shipa.photons[j][0]; // current xpos
+                        GLfloat ypos = shipa.photons[j][1]; // current ypos
+                        GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
+                        printf("currentLength = %4.5f\n", currentLength);
+                        printf("ShortestPhotonSegment[%d] = %4.3f\n", j, ShortestPhotonSegment[j]);
+                        
+                        
+                        if (currentLength >= ShortestPhotonSegment[j] or shipa.photons[j][3] <= 0.0f) {
                             //                    printf("Collision!\n");
-                            //                    shipa.photons[j][3] = -0.01f;
-                            shipa.photons.erase (shipa.photons.begin() + j);
+                            shipa.photons[j][3] = -1.0f;
                             Draw = false;
-//                            printf("Hit!\n");
+                            //                            printf("Hit!\n");
                             //                            score += attackerPoints; // each attacker destroyed is worth 10 points
                             //                            scoreLevel += attackerPoints;
                             playBell = true;
@@ -445,7 +461,7 @@ public:
                 //                std::cout << "\nI'm in!\n";
             }
             // Clear attacker photons queue or they can still cause ship to explode even though they are visable.
-            for (int i=0; i < photons.size(); i++) photons[i][3] = -1.0;
+            for (int i=0; i < maxPhotons; i++) photons[i][3] = -1.0;
             // give attacker time to explode, although it's not needed...
             explodeTime += deltaTime;
             if (explodeTime > explodeDuration) {
@@ -522,7 +538,7 @@ public:
         
         // store existing photons
 //        printf("photons.size() 1 = %lu\n", photons.size());
-        if (shootPhoton == true and photonTimer >= photonRate and photons.size() < maxPhotons) {
+        if (shootPhoton == true and photonTimer >= photonRate) {
             // incrementor is used to randomize each gunner photon fire rate
             GLfloat xposShifted;
             GLfloat yposShifted;
@@ -542,21 +558,19 @@ public:
                     xposShifted = xpos;
                     yposShifted = ypos;
                 }
-                std::vector<GLfloat> photonParams;
                 GLfloat xPhotonEnd_rot = 2 * cos(photonAngle); //2 ia m distance in x or y
                 GLfloat yPhotonEnd_rot = 2 * sin(photonAngle); //2 ia m distance in x or y
-                photonParams.push_back(xposShifted);
-                photonParams.push_back(yposShifted);
-                photonParams.push_back(photonAngle);
-                photonParams.push_back(photonDuration);
-                photonParams.push_back(xposShifted);  //  start xpos, not updated as photon moves
-                photonParams.push_back(yposShifted);  //  start ypos, not updated as photon moves
-                photonParams.push_back(xposShifted + xPhotonEnd_rot); // endpoint of photon virtual line segment
-                photonParams.push_back(yposShifted + yPhotonEnd_rot); // endpoint of photon virtual line segment
-                photonParams.push_back(1.0); // 1.0 indicates a new photon for the collision calculations
-                photonParams.push_back(photonMaxDistance);  // for surfaces
-                photonParams.push_back(photonMaxDistance);  // for gunners
-                photons.push_back(photonParams);
+                photons[pQueue][0] = xposShifted;
+                photons[pQueue][1] = yposShifted;
+                photons[pQueue][2] = photonAngle;
+                photons[pQueue][3] = photonDuration;
+                photons[pQueue][4] = xposShifted;  //  start xpos, not updated as photon moves
+                photons[pQueue][5] = yposShifted;  //  start ypos, not updated as photon moves
+                photons[pQueue][6] = xposShifted + xPhotonEnd_rot; // endpoint of photon virtual line segment
+                photons[pQueue][7] = yposShifted + yPhotonEnd_rot; // endpoint of photon virtual line segment
+                photons[pQueue][8] = 1.0; // 1.0 indicates a new photon for the collision calculations
+                photons[pQueue][9] = photonMaxDistance;  // for surfaces
+
 //                printf("photons.size() 2 = %lu\n", photons.size());
                 
                 pQueue = ++pQueue % maxPhotons;
@@ -577,17 +591,17 @@ public:
         
         
         // calculate new postion of each existing photon and draw it
-        for (std::vector<GLfloat> &photona : photons) {
+        for (int i=0; i < maxPhotons; i++) {
 //            printf("photona[3] = %3.4f\n", photona[3]);
 //            printf("photon[][9] = %4.5f\n", photona[9]);
 //            printf("photon[][10] = %4.5f\n", photona[10]);
-            if (photona[3] > 0) {
+            if (photons[i][3] > 0) {
 //                printf("in photon draw\n");
                 
 //                GLfloat lastxpostemp = photona[0];
 //                GLfloat lastypostemp = photona[1];
-                photona[0] += photonSpeed * deltaTime * cos(photona[2]);
-                photona[1] += photonSpeed * deltaTime * sin(photona[2]);
+                photons[i][0] += photonSpeed * deltaTime * cos(photons[i][2]);
+                photons[i][1] += photonSpeed * deltaTime * sin(photons[i][2]);
 //                if (isGunner == false) {
 //                    GLfloat drawCyclePhotonDisplacement = sqrt(pow(photona[0] - lastxpostemp, 2) + pow(photona[1] - lastypostemp, 2));
 //                    printf("dist = %4.4f, dT = %4.4f, xpos = %4.4f, ypos = %4.7f\n", drawCyclePhotonDisplacement, deltaTime, photona[0], photona[1]);
@@ -597,7 +611,7 @@ public:
                 glEnable(GL_PROGRAM_POINT_SIZE);
                 glm::mat4 model = glm::mat4(1.0f);
                 //        model = glm::translate(model, glm::vec3(photons[pcounter][0], photons[pcounter][0], 0.0f));
-                model = glm::translate(model, glm::vec3(photona[0], photona[1], 0.0f));
+                model = glm::translate(model, glm::vec3(photons[i][0], photons[i][1], 0.0f));
                 
                 pShader->setMat4("model", model);
                 //                    shader.setFloat("aPointSize", 4.0f);
@@ -606,7 +620,7 @@ public:
                 glDrawArrays(GL_POINTS, 0, 1);
                 glDisable(GL_PROGRAM_POINT_SIZE);
                 glBindVertexArray(0);
-                photona[3] -= deltaTime;
+                photons[i][3] -= deltaTime;
             }
         }
     }

@@ -177,7 +177,7 @@ public:
     void checkPhotons(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat slope, GLfloat yIntercept,Spaceship * anyShip_pntr, GLboolean panEnable)
     {
         // Now check if photons have hit surface boundaries, if so stop drawing them
-        for ( int j=0; j < maxPhotons; j++) {
+        for ( int j=0; j < anyShip_pntr->maxPhotons; j++) {
             if (anyShip_pntr->photons[j][3] > 0)  {
                 if ( x2 - x1 > 0.00001) {
                     //                            std::cout << "I'm in 1\n";

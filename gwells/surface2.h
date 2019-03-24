@@ -26,7 +26,7 @@ class Surface2
     GLfloat yIntercept;
     glm::vec3 surfaceScaleFactor = glm::vec3(1.0f, 1.0f, 1.0f);
     
-    GLfloat photonSegmentLengthReducer = 1.0f;  // Distance a photon can travel in on draw cycle.  This is to keep it from crossing a boundary.
+    GLfloat photonSegmentLengthReducer = 0.5f;  // Distance a photon can travel in on draw cycle.  This is to keep it from crossing a boundary.
     
  
 public:
@@ -187,8 +187,8 @@ public:
                                     GLfloat xIntersect = x1 + ta * (x2 - x1);
                                     GLfloat yIntersect = y1 + ta * (y2 - y1);
                                     
-                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
-//                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2)) - photonSegmentLengthReducer * deltaTime;
+//                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2));
+                                    GLfloat photonSegmentLength = sqrt(pow(xIntersect - x1, 2) + pow(yIntersect - y1, 2)) - photonSegmentLengthReducer * deltaTime;
                                     
 //                                    printf("Surface: gunna.photons[%d][9] = %4.3f\n", j, gunna.photons[j][9]);
 //                                    printf("Surface: photonSegmentLength = %4.3f\n", photonSegmentLength);
@@ -211,7 +211,7 @@ public:
                     GLfloat currentLength = sqrt(pow(xpos - xstart, 2) + pow(ypos - ystart, 2));
                     if (currentLength >= gunna.photons[j][9] or gunna.photons[j][3] <= 0.0f) {
 //                        printf("Collision!\n");
-                        gunna.photons[j][3] = -1.0f;
+                        gunna.photons[j][3] = 0.0f;
                     }
                     
                 }

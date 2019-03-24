@@ -145,7 +145,7 @@ public:
             photons[i][0] = 0;
             photons[i][1] = 0;
             photons[i][2] = 0;
-            photons[i][3] = -1.0f;
+            photons[i][3] = 0;
             photons[i][4] = 0;  //  start xpos, not updated as photon moves
             photons[i][5] = 0;  //  start ypos, not updated as photon moves
             photons[i][6] = 0; // endpoint of photon virtual line segment
@@ -303,7 +303,7 @@ public:
                     if (gunna.photons[j][3] > 0)  {
                         if (gunna.photons[j][0] > xpos - Shape.x/2 and gunna.photons[j][0] < xpos + Shape.x/2 and gunna.photons[j][1] > ypos - Shape.y/2 and gunna.photons[j][1] < ypos + Shape.y/2) {
                             Draw = false;
-                            gunna.photons[j][3] = -0.01f;  // photon destroyed in the collision
+                            gunna.photons[j][3] = 0.0f;  // photon destroyed in the collision
                             explodeShip = true;
                             playBell = true;
                         }
@@ -422,7 +422,7 @@ public:
                                     }
                                 } else ShortestPhotonSegment[j] = photonMaxDistance;
                             }
-                        }
+                        } else ShortestPhotonSegment[j] = photonMaxDistance;
                     }
 //                printf("Spaceship shipa.photons.size() = %lu\n", shipa.photons.size());
 //                printf("Spaceship Draw = %d\n", Draw);
@@ -437,9 +437,9 @@ public:
                         printf("ShortestPhotonSegment[%d] = %4.3f\n", j, ShortestPhotonSegment[j]);
                         
                         
-                        if (currentLength >= ShortestPhotonSegment[j] or shipa.photons[j][3] <= 0.0f) {
+                        if (currentLength >= ShortestPhotonSegment[j]) {
                             //                    printf("Collision!\n");
-                            shipa.photons[j][3] = -1.0f;
+                            shipa.photons[j][3] = 0.0f;
                             Draw = false;
                             //                            printf("Hit!\n");
                             //                            score += attackerPoints; // each attacker destroyed is worth 10 points
@@ -450,7 +450,7 @@ public:
                             //                            snd->stop();
                             //                            engine->stop("/Users/dirk/games/media/sirenwawa.wav");
                         }
-                    }
+                    } else shipa.photons[j][3] = 0.0f;
                 }
             }
         } else if (explodeShip == true) {
@@ -535,10 +535,14 @@ public:
     
     void updatePhotons(GLboolean shootPhoton, GLboolean enablePhotonSound, Vbos * vbos_p, Shader * pShader, GLfloat photonRate, GLfloat photonAngle, GLfloat deltaTime, GLboolean isGunner)
     {
-        
+        // Photon queue is only full when all Durations are greater than zero.
+        GLfloat pQueueFull = 1.0f;
+        for (int i=0; i < maxPhotons; i++) {
+            pQueueFull *= photons[i][3];
+        }
         // store existing photons
 //        printf("photons.size() 1 = %lu\n", photons.size());
-        if (shootPhoton == true and photonTimer >= photonRate) {
+        if (shootPhoton == true and photonTimer >= photonRate and pQueueFull == 0) {
             // incrementor is used to randomize each gunner photon fire rate
             GLfloat xposShifted;
             GLfloat yposShifted;
@@ -572,7 +576,7 @@ public:
                 photons[pQueue][9] = photonMaxDistance;  // for surfaces
 
 //                printf("photons.size() 2 = %lu\n", photons.size());
-                
+
                 pQueue = ++pQueue % maxPhotons;
                 photonTimer = 0;
                 if (isGunner == true) {
